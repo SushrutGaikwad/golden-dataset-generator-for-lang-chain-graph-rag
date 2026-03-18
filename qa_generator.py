@@ -59,7 +59,7 @@ RULES:
 4. question_type must be one of: factual, conceptual, procedural, comparative, multi_hop, edge_case.
 5. For multi_hop and comparative questions, use information from MULTIPLE documents when possible.
 6. Questions should be specific and unambiguous.
-7. Answers should be detailed (2-5 sentences) and self-contained.
+7. Answers should be detailed and self-contained.
 
 QUESTION TYPE DEFINITIONS:
 - factual: Direct fact lookup from a single passage (e.g., "What is the default value of X?")
@@ -275,3 +275,85 @@ class QAGenerator:
             )
 
         return self.all_pairs
+
+    def generate_targeted(
+        self,
+        documents: list[Document],
+        num_pairs: int,
+        target_types: list[str],
+        min_sources: int = 2,
+    ) -> list[dict]:
+        """Generate QA pairs targeting specific question types using multi-document batches.
+
+        Args:
+            documents: Full document list to sample from.
+            num_pairs: Number of pairs to generate.
+            target_types: Question types to focus on.
+            min_sources: Minimum number of source files per pair.
+
+        Returns:
+            List of validated QA pair dictionaries.
+        """
+        # Build batches that mix libraries for cross-document questions
+        shuffled = documents.copy()
+        random.shuffle(shuffled)
+
+        # Use larger batches to give the model more cross-document material
+        batch_size = 12
+        batches = [
+            shuffled[i : i + batch_size] for i in range(0, len(shuffled), batch_size)
+        ]
+
+        type_list = ", ".join(target_types)
+        type_guidance = (
+            f"Generate ONLY these question types: {type_list}.\n"
+            f"CRITICAL: Every question MUST reference at least {min_sources} different "
+            f"source documents. Use information from multiple files to form each question "
+            f"and answer. Do NOT generate single-document questions."
+        )
+
+        all_targeted: list[dict] = []
+        pairs_remaining = num_pairs
+
+        for i, batch in enumerate(batches):
+            if pairs_remaining <= 0:
+                break
+
+            request_count = min(pairs_remaining, 6)
+            logger.info(
+                f"Targeted batch {i + 1}: {len(batch)} docs, "
+                f"requesting {request_count} {type_list} pairs"
+            )
+
+            user_prompt = _build_user_prompt(batch, request_count, type_guidance)
+            raw_response = self._call_openai(user_prompt)
+
+            if raw_response is None:
+                logger.warning(f"Targeted batch {i + 1} failed, skipping")
+                continue
+
+            pairs = self._parse_response(raw_response)
+
+            # Extra filter: only keep pairs that match target types and min sources
+            valid = []
+            for pair in pairs:
+                if pair["question_type"] not in target_types:
+                    logger.warning(
+                        f"Skipping non-target type '{pair['question_type']}'"
+                    )
+                    continue
+                if len(pair.get("source_files", [])) < min_sources:
+                    logger.warning(
+                        f"Skipping pair with only {len(pair.get('source_files', []))} source(s)"
+                    )
+                    continue
+                valid.append(pair)
+
+            all_targeted.extend(valid)
+            pairs_remaining -= len(valid)
+            logger.info(
+                f"Targeted batch {i + 1}: {len(valid)} valid pairs "
+                f"(total targeted: {len(all_targeted)})"
+            )
+
+        return all_targeted

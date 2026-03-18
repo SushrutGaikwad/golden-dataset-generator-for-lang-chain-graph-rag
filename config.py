@@ -12,7 +12,7 @@ MODEL_NAME: str = "gpt-5.4-2026-03-05"
 REASONING_EFFORT: str = "high"
 
 # --- Dataset Targets ---
-TARGET_QA_PAIRS: int = 60  # aim for middle of 50-100 range
+TARGET_QA_PAIRS: int = 100  # aim for middle of 50-100 range
 MAX_TOKENS_PER_CALL: int = 16000
 
 # --- Question Type Distribution (target percentages) ---

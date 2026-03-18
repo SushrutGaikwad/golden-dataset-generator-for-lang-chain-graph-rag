@@ -1,0 +1,1451 @@
+{
+  "metadata": {
+    "total_pairs": 102,
+    "generator_model": "gpt-5.4-2026-03-05",
+    "reasoning_effort": "high",
+    "question_types": [
+      "factual",
+      "conceptual",
+      "procedural",
+      "comparative",
+      "multi_hop",
+      "edge_case"
+    ],
+    "topup_applied": true,
+    "topup_count": 12
+  },
+  "qa_pairs": [
+    {
+      "question": "In the router knowledge base tutorial, what is the purpose of the `results` field in `RouterState`, and what reducer does it use in Python and JS?",
+      "answer": "The `results` field is used to collect outputs from parallel agent executions into one list. In Python it uses `operator.add` as the reducer, and in JS it uses a concat function.",
+      "source_files": [
+        "langchain/multi-agent/router-knowledge-base.mdx"
+      ],
+      "supporting_passages": [
+        "results: Annotated[list[AgentOutput], operator.add]  # Reducer collects parallel results",
+        "The `results` field uses a **reducer** (`operator.add` in Python, a concat function in JS) to collect outputs from parallel agent executions into a single list."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How does LangGraph distinguish short-term memory from long-term memory in terms of scope, persistence, and recall?",
+      "answer": "Short-term memory is thread-scoped memory for the current conversation. LangGraph keeps it in the agent's state, persists that state with a checkpointer so the thread can be resumed, updates it when the graph is invoked or a step completes, and reads it at the start of each step. Long-term memory stores user-specific or application-level data across sessions and across conversational threads, can be recalled at any time in any thread, and is stored in custom namespaces via stores.",
+      "source_files": [
+        "concepts/memory.mdx"
+      ],
+      "supporting_passages": [
+        "* [Short-term memory](#short-term-memory), or [thread](/oss/langgraph/persistence#threads)-scoped memory, tracks the ongoing conversation by maintaining message history within a session. LangGraph manages short-term memory as a part of your agent's [state](/oss/langgraph/graph-api#state). State is persisted to a database using a [checkpointer](/oss/langgraph/persistence#checkpoints) so the thread can be resumed at any time. Short-term memory updates when the graph is invoked or a step is completed, and the State is read at the start of each step.",
+        "* [Long-term memory](#long-term-memory) stores user-specific or application-level data across sessions and is shared _across_ conversational threads. It can be recalled _at any time_ and _in any thread_. Memories are scoped to any custom namespace, not just within a single thread ID. LangGraph provides [stores](/oss/langgraph/persistence#memory-store) ([reference doc](https://langchain-ai.github.io/langgraph/reference/store/#langgraph.store.base.BaseStore)) to let you save and recall long-term memories."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "In the Python custom RAG tutorial, after splitting documents, how do you turn them into a retriever tool?",
+      "answer": "After splitting the documents, the tutorial first builds an in-memory vector store from `doc_splits` using `OpenAIEmbeddings`, then converts that vector store into a retriever. Next, it defines a tool with `@tool` that calls `retriever.invoke(query)`, joins the returned document contents with `\"\\n\\n\"`, and assigns that tool to `retriever_tool`.",
+      "source_files": [
+        "langgraph/agentic-rag.mdx"
+      ],
+      "supporting_passages": [
+        "1. Use an in-memory vector store and OpenAI embeddings:",
+        "  from langchain_core.vectorstores import InMemoryVectorStore\n  from langchain_openai import OpenAIEmbeddings\n\n  vectorstore = InMemoryVectorStore.from_documents(\n      documents=doc_splits, embedding=OpenAIEmbeddings()\n  )\n  retriever = vectorstore.as_retriever()",
+        "2. Create a retriever tool using the `@tool` decorator:",
+        "  from langchain.tools import tool\n\n  @tool\n  def retrieve_blog_posts(query: str) -> str:\n      \"\"\"Search and return information about Lilian Weng blog posts.\"\"\"\n      docs = retriever.invoke(query)\n      return \"\\n\\n\".join([doc.page_content for doc in docs])\n\n  retriever_tool = retrieve_blog_posts"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "If you build the multi-source knowledge base router and want LangSmith visibility into its behavior, what setup is required and what tracing behavior should you expect from LangChain agents?",
+      "answer": "For the router tutorial, you need the `langchain` and `langgraph` packages. To inspect what is happening inside the agent with LangSmith, enable tracing by setting `LANGSMITH_TRACING` and `LANGSMITH_API_KEY`. LangChain agents automatically support LangSmith tracing, and no extra code is needed to log traces once those environment variables are set.",
+      "source_files": [
+        "langchain/multi-agent/router-knowledge-base.mdx",
+        "langchain/observability.mdx"
+      ],
+      "supporting_passages": [
+        "This tutorial requires the `langchain` and `langgraph` packages:",
+        "Set up [LangSmith](https://smith.langchain.com) to inspect what is happening inside your agent. Then set the following environment variables:",
+        "All LangChain agents automatically support LangSmith tracing. To enable it, set the following environment variables:",
+        "export LANGSMITH_TRACING=true\nexport LANGSMITH_API_KEY=<your-api-key>",
+        "No extra code is needed to log a trace to LangSmith. Just run your agent code as you normally would:"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "How do you wire up `useStream` for graph execution cards, and which `useStream` properties are used for routing live tokens and reading completed node outputs?",
+      "answer": "You wire up `useStream` by creating a stream with your agent URL and assistant ID. The key properties are `messages` for routing streaming content, `values` for completed node outputs, and `getMessagesMetadata` for identifying which node produced each token.",
+      "source_files": [
+        "langgraph/frontend/graph-execution.mdx"
+      ],
+      "supporting_passages": [
+        "Wire up `useStream` as usual. The key properties you'll use are `messages`\n(for streaming content routing), `values` (for completed node outputs), and\n`getMessagesMetadata` (for identifying which node produced each token).",
+        "const stream = useStream<typeof myAgent>({\n    apiUrl: AGENT_URL,\n    assistantId: \"graph_execution_cards\",\n  });"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "How could graph execution cards help users understand a router-based multi-agent knowledge base that classifies a query, sends it to source-specific agents, and synthesizes the answer?",
+      "answer": "A router-based knowledge base already has a workflow that classifies input, directs it to specialized agents, and synthesizes the results, including parallel routing when relevant. Graph execution cards can make that workflow visible by rendering a card for each named node, showing each node's status, streaming content in real time, and tracking completion, so users can see what step the agent is on and what each step produced.",
+      "source_files": [
+        "langchain/multi-agent/router-knowledge-base.mdx",
+        "langgraph/frontend/graph-execution.mdx"
+      ],
+      "supporting_passages": [
+        "The **router pattern** is a [multi-agent](/oss/langchain/multi-agent) architecture where a routing step classifies input and directs it to specialized agents, with results synthesized into a combined response.",
+        "When a user asks \"How do I authenticate API requests?\", the router decomposes the query into source-specific sub-questions, routes them to the relevant agents in parallel, and synthesizes results into a coherent answer.",
+        "Every graph is composed of **named nodes**\nthat execute in sequence or in parallel: classify, research, analyze,\nsynthesize. Graph execution cards make this pipeline visible by rendering a card\nfor each node, showing its status, streaming its content in real time, and\ntracking completion across the entire workflow. Users see exactly what the agent\nis doing, which step it's on, and what each step produced."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "What typically causes `GRAPH_RECURSION_LIMIT`, and how should you respond differently if it indicates an unintended cycle versus a legitimately complex graph?",
+      "answer": "This error means a `StateGraph` reached its maximum number of steps before hitting a stop condition. The docs say this is often caused by an infinite loop; if you were not expecting many iterations, you likely have a cycle and should check your logic for infinite loops. If the graph is genuinely complex, you can increase the limit by passing a higher `recursion_limit` in Python or `recursionLimit` in JS when invoking the graph.",
+      "source_files": [
+        "langgraph/errors/GRAPH_RECURSION_LIMIT.mdx"
+      ],
+      "supporting_passages": [
+        "Your LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) reached the maximum number of steps before hitting a stop condition.\nThis is often due to an infinite loop caused by code like the example below:",
+        "However, complex graphs may hit the default limit naturally.",
+        "* If you are not expecting your graph to go through many iterations, you likely have a cycle. Check your logic for infinite loops.",
+        "* If you have a complex graph, you can pass in a higher `recursion_limit` value into your `config` object when invoking your graph like this:",
+        "* If you have a complex graph, you can pass in a higher `recursionLimit` value into your `config` object when invoking your graph like this:"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "In LangChain's Generative UI integration, what is `JSONUIProvider` required for, and where must `Renderer` be rendered?",
+      "answer": "`JSONUIProvider` is required to initialize json-render's internal context providers for state, visibility, validation, and actions. The `Renderer` must be rendered inside `JSONUIProvider` so it can access that context.",
+      "source_files": [
+        "langchain/frontend/generative-ui.mdx"
+      ],
+      "supporting_passages": [
+        "The `JSONUIProvider` is required to set up json-render's internal context\nproviders (state, visibility, validation, actions). The `Renderer` component\nmust be rendered inside it."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "When an agent is streaming a json-render spec, how should you safely render the UI progressively?",
+      "answer": "Render the UI progressively by treating the streamed spec as partial data. First, check that the spec has a root and elements, and only render when the root element has a valid `type` and non-null `props`. Then filter the `elements` map so you keep only complete elements with valid `type` and non-null `props`. Pass `loading={true}` during streaming so the `Renderer` skips children that have not arrived yet, letting the UI build up incrementally. Finally, render the `Renderer` inside `JSONUIProvider` so json-render's internal context is available.",
+      "source_files": [
+        "langchain/frontend/generative-ui.mdx"
+      ],
+      "supporting_passages": [
+        "During streaming, the spec is built up incrementally. Elements arrive one at a\ntime and may initially lack `type` or `props`. Filter to only complete elements\nand pass `loading={true}` to the `Renderer`, which tells it to silently skip\nchildren that haven't arrived yet. The UI builds up component by component:",
+        "- **Validate before rendering**: always check that elements have valid `type` and\n  non-null `props` before passing to the Renderer, since streaming delivers partial data.",
+        "- **Design for streaming**: pass `loading={true}` during streaming so the Renderer\n  gracefully handles children that haven't arrived yet. Users see the UI build up\n  in real time rather than waiting for the full response.",
+        "- **Wrap with JSONUIProvider**: the `Renderer` must be inside a `JSONUIProvider`\n  to access json-render's internal context for state, visibility, and actions."
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "How does the LangGraph Functional API differ from a custom workflow in terms of coding style and control over execution flow?",
+      "answer": "The Functional API is meant to add LangGraph capabilities to existing code with minimal restructuring. It works well when you want to keep using normal control-flow constructs like `if` statements, loops, and function calls without being forced into an explicit pipeline or DAG. A custom workflow, by contrast, is for defining a bespoke execution flow in LangGraph with full control over graph structure, including sequential steps, conditional branches, loops, and parallel execution. In short, the Functional API emphasizes minimal changes to existing code, while a custom workflow emphasizes maximum control over the graph.",
+      "source_files": [
+        "langgraph/functional-api.mdx",
+        "langchain/multi-agent/custom-workflow.mdx"
+      ],
+      "supporting_passages": [
+        "The **Functional API** allows you to add LangGraph's key features ([persistence](/oss/langgraph/persistence), [memory](/oss/langgraph/add-memory), [human-in-the-loop](/oss/langgraph/interrupts), and [streaming](/oss/langgraph/streaming)) to your applications with minimal changes to your existing code.",
+        "It is designed to integrate these features into existing code that may use standard language primitives for branching and control flow, such as `if` statements, `for` loops, and function calls. Unlike many data orchestration frameworks that require restructuring code into an explicit pipeline or DAG, the Functional API allows you to incorporate these capabilities without enforcing a rigid execution model.",
+        "In the **custom workflow** architecture, you define your own bespoke execution flow using [LangGraph](/oss/langgraph/overview). You have complete control over the graph structure—including sequential steps, conditional branches, loops, and parallel execution."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "If you call a LangChain agent inside a LangGraph custom workflow node, which streaming mode should you use for agent-step updates, and which one should you use for token-level output?",
+      "answer": "Because a custom workflow node can invoke a LangChain agent directly inside LangGraph, you can use LangChain's streaming modes on that graph execution. Use `updates` when you want progress after each agent step. Use `messages` when you want token-level output from LLM invocations, since that mode streams `(token, metadata)` from graph nodes where an LLM is called.",
+      "source_files": [
+        "langchain/multi-agent/custom-workflow.mdx",
+        "langchain/streaming.mdx"
+      ],
+      "supporting_passages": [
+        "The core insight is that you can call a LangChain agent directly inside any LangGraph node, combining the flexibility of custom workflows with the convenience of prebuilt agents:",
+        "To stream agent progress, use the @[`stream`][CompiledStateGraph.stream] or @[`astream`][CompiledStateGraph.astream] methods with `stream_mode=\"updates\"`. This emits an event after every agent step.",
+        "To stream tokens as they are produced by the LLM, use `stream_mode=\"messages\"`. Below you can see the output of the agent streaming tool calls and the final response."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "If you get a `MODEL_AUTHENTICATION` error and suspect environment-variable authentication is the issue, what checks and fallback does the documentation recommend?",
+      "answer": "The docs recommend first confirming that your API key or other authentication credentials are correct and valid. If you are using environment-based authentication, you should verify that the variable name is spelled correctly, that the variable actually has a value, and that packages such as `dotenv` have not interfered with loading. If you are using a proxy or non-standard endpoint, make sure your custom provider is not expecting a different authentication scheme. As a fallback, you can bypass environment-variable issues by passing credentials explicitly, for example by setting `apiKey` directly when constructing the model.",
+      "source_files": [
+        "langchain/errors/MODEL_AUTHENTICATION.mdx"
+      ],
+      "supporting_passages": [
+        "This error typically occurs when there's an issue with your authentication credentials or API keys.",
+        "* Confirm that your API key or authentication credentials are accurate and valid.",
+        "* If using environment-based authentication, verify:\n    - The variable name is spelled correctly\n    - The variable contains an assigned value\n    - Third-party packages like `dotenv` haven't interfered with loading",
+        "* If using a proxy or non-standard endpoint, make sure that your custom provider does not expect an alternative authentication scheme.",
+        "* Bypass environment variable issues by passing credentials explicitly:",
+        "const model = new ChatOpenAI({\n  apiKey: \"YOUR_KEY_HERE\",\n});"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "Why does the supervisor pattern make sense for a personal assistant that handles both calendar and email work?",
+      "answer": "The supervisor pattern is a good fit because it lets a central supervisor coordinate focused specialists for different domains. In the personal assistant example, the work is split between a calendar agent and an email agent, which have fundamentally different responsibilities. The docs explain that this pattern is especially useful when tasks require different kinds of expertise, because it is better to create focused specialists than to force one agent to manage tool selection, API formats, and reasoning across multiple domains all at once.",
+      "source_files": [
+        "langchain/multi-agent/subagents-personal-assistant.mdx"
+      ],
+      "supporting_passages": [
+        "The **supervisor pattern** is a [multi-agent](/oss/langchain/multi-agent) architecture where a central supervisor agent coordinates specialized worker agents. This approach excels when tasks require different types of expertise. Rather than building one agent that manages tool selection across domains, you create focused specialists coordinated by a supervisor who understands the overall workflow.",
+        "The system will coordinate two specialists with fundamentally different responsibilities:\n\n- A **calendar agent** that handles scheduling, availability checking, and event management.\n- An **email agent** that manages communication, drafts messages, and sends notifications.",
+        "Multi-agent architectures allow you to partition [tools](/oss/langchain/tools) across workers, each with their own individual prompts or instructions. Consider an agent with direct access to all calendar and email APIs: it must choose from many similar tools, understand exact formats for each API, and handle multiple domains simultaneously. If performance degrades, it may be helpful to separate related tools and associated prompts into logical groups (in part to manage iterative improvements)."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "According to the docs, when would you choose the supervisor pattern instead of a custom workflow, and when is a custom workflow the better fit?",
+      "answer": "Choose the supervisor pattern when the problem naturally breaks into specialized domains and you want a central supervisor to coordinate focused worker agents. The docs present it as especially useful when tasks need different kinds of expertise, such as separate calendar and email specialists. Choose a custom workflow when standard patterns like subagents are not enough and you need a bespoke LangGraph flow with explicit control over branching, loops, parallel execution, or other complex routing and multi-stage processing.",
+      "source_files": [
+        "langchain/multi-agent/subagents-personal-assistant.mdx",
+        "langchain/multi-agent/custom-workflow.mdx"
+      ],
+      "supporting_passages": [
+        "The **supervisor pattern** is a [multi-agent](/oss/langchain/multi-agent) architecture where a central supervisor agent coordinates specialized worker agents. This approach excels when tasks require different types of expertise. Rather than building one agent that manages tool selection across domains, you create focused specialists coordinated by a supervisor who understands the overall workflow.",
+        "In the **custom workflow** architecture, you define your own bespoke execution flow using [LangGraph](/oss/langgraph/overview). You have complete control over the graph structure—including sequential steps, conditional branches, loops, and parallel execution.",
+        "Use custom workflows when standard patterns (subagents, skills, etc.) don't fit your requirements, you need to mix deterministic logic with agentic behavior, or your use case requires complex routing or multi-stage processing."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "What partial-data issue can happen while streaming a generative UI spec, and what validation should happen before rendering?",
+      "answer": "While the UI spec is streaming in, elements can arrive incompletely: they may be missing `type` or `props` at first. Because of that, you should validate before rendering by ensuring elements have a valid `type` and non-null `props`. The docs also recommend filtering to complete elements only, and using `loading={true}` so the `Renderer` can silently skip children that have not arrived yet.",
+      "source_files": [
+        "langchain/frontend/generative-ui.mdx"
+      ],
+      "supporting_passages": [
+        "During streaming, the spec is built up incrementally. Elements arrive one at a\ntime and may initially lack `type` or `props`.",
+        "- **Validate before rendering**: always check that elements have valid `type` and\n  non-null `props` before passing to the Renderer, since streaming delivers partial data.",
+        "Filter to only complete elements\nand pass `loading={true}` to the `Renderer`, which tells it to silently skip\nchildren that haven't arrived yet."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "According to the LangChain messages documentation, what three pieces of information does every message object contain?",
+      "answer": "Every LangChain message object contains three core parts: a role, content, and metadata. The role identifies the message type, such as `system` or `user`. The content holds the actual payload, such as text or multimodal inputs. Metadata is optional and can include response information, message IDs, and token usage.",
+      "source_files": [
+        "langchain/messages.mdx"
+      ],
+      "supporting_passages": [
+        "Messages are objects that contain:",
+        "* <Icon icon=\"user\" size={16} /> [**Role**](#message-types) - Identifies the message type (e.g. `system`, `user`)",
+        "* <Icon icon=\"folder\" size={16} /> [**Content**](#message-content) - Represents the actual content of the message (like text, images, audio, documents, etc.)",
+        "* <Icon icon=\"tag\" size={16} /> [**Metadata**](#message-metadata) - Optional fields such as response information, message IDs, and token usage"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How do short-term memory and long-term memory differ in scope and purpose in the LangGraph/LangChain docs?",
+      "answer": "Short-term memory is used for conversation-level continuity: it is part of an agent's state and enables multi-turn conversations. Long-term memory is meant for persistence across sessions: it stores user-specific or application-level data, and LangGraph stores those memories as JSON documents in a store organized by namespace and key.",
+      "source_files": [
+        "langgraph/add-memory.mdx",
+        "langchain/long-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "AI applications need [memory](/oss/concepts/memory) to share context across multiple interactions. In LangGraph, you can add two types of memory:",
+        "* [Add short-term memory](#add-short-term-memory) as a part of your agent's [state](/oss/langgraph/graph-api#state) to enable multi-turn conversations.",
+        "* [Add long-term memory](#add-long-term-memory) to store user-specific or application-level data across sessions.",
+        "LangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/persistence#memory-store).",
+        "Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name)."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "What are the minimum steps shown in the docs to add short-term memory to a LangGraph graph?",
+      "answer": "The docs show four basic steps: import `InMemorySaver`, instantiate it as a checkpointer, compile the graph with that checkpointer, and invoke the graph with a `thread_id`. This enables thread-level persistence so the graph can track multi-turn conversations.",
+      "source_files": [
+        "langgraph/add-memory.mdx"
+      ],
+      "supporting_passages": [
+        "**Short-term** memory (thread-level [persistence](/oss/langgraph/persistence)) enables agents to track multi-turn conversations. To add short-term memory:",
+        "from langgraph.checkpoint.memory import InMemorySaver  # [!code highlight]",
+        "checkpointer = InMemorySaver()  # [!code highlight]",
+        "graph = builder.compile(checkpointer=checkpointer)  # [!code highlight]",
+        "    {\"configurable\": {\"thread_id\": \"1\"}},  # [!code highlight]"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "In LangChainJS, what exact tool-calling mistakes trigger `INVALID_TOOL_RESULTS`, and how do the docs say to fix them?",
+      "answer": "`INVALID_TOOL_RESULTS` happens when the tool-message chain is malformed during tool calling. After an assistant message with `tool_calls`, you must send exactly one corresponding `ToolMessage` for each tool call, with matching `tool_call_id` values. The docs list three common failure modes: insufficient responses, duplicate or unmatched responses, and orphaned tool messages without a preceding AI tool-call message. To fix it, count the pairs and verify that each `ToolMessage.tool_call_id` matches a real tool call identifier.",
+      "source_files": [
+        "langchain/errors/INVALID_TOOL_RESULTS.mdx"
+      ],
+      "supporting_passages": [
+        "Currently only used in `langchainjs` (JavaScript/TypeScript).",
+        "This error occurs when passing mismatched, insufficient, or excessive @[`ToolMessage`] objects to a model during tool calling operations.",
+        "The error stems from a fundamental requirement: an assistant message with `tool_calls` must be followed by tool messages responding to each `tool_call_id`.",
+        "When a model returns an @[`AIMessage`] with tool calls, you must provide exactly one corresponding @[`ToolMessage`] for each tool call, with matching `tool_call_id` values.",
+        "* **Insufficient responses**: If a model requests two tool executions but you only provide one response message, the model rejects the incomplete message chain",
+        "* **Duplicate responses**: Providing multiple @[`ToolMessage`] objects for the same tool call ID results in rejection, as does having unmatched IDs",
+        "* **Orphaned tool messages**: Sending a @[`ToolMessage`] without a preceding @[`AIMessage`] containing tool calls violates protocol requirements",
+        "* **Count matching pairs**: Ensure one @[`ToolMessage`] exists per tool call in the preceding @[`AIMessage`]",
+        "* **Verify IDs**: Confirm each `ToolMessage.tool_call_id` matches an actual tool call identifier"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "If you are building a UI for an agent, how do the docs say the frontend connects to a `createAgent` backend, and what should replace in-memory checkpointing in production?",
+      "answer": "The documented frontend architecture is that a `createAgent` backend streams state to the UI through `useStream`. The backend is a compiled LangGraph graph with a streaming API, and the frontend hook exposes reactive state such as messages, tool calls, interrupts, and history. For persistence, the examples show an in-memory checkpointer like `MemorySaver`, but the docs say production should use a persistent, database-backed checkpointer.",
+      "source_files": [
+        "langchain/frontend/overview.mdx",
+        "langchain/quickstart.mdx"
+      ],
+      "supporting_passages": [
+        "Every pattern follows the same architecture: a `createAgent` backend streams state to a frontend via the `useStream` hook.",
+        "On the backend, `createAgent` produces a compiled LangGraph graph that exposes a streaming API. On the frontend, the `useStream` hook connects to that API and provides reactive state — messages, tool calls, interrupts, history, and more — that you render with any framework.",
+        "    checkpointer=MemorySaver(),",
+        "In production, use a persistent checkpointer that saves message history to a database."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "What defines the skills architecture in LangChain, and when do the docs recommend using it?",
+      "answer": "The skills architecture packages specialized capabilities as invocable skills that extend an agent. These skills are mainly prompt-driven specializations that can be invoked on demand. The pattern emphasizes progressive disclosure, lightweight composition, and independent team ownership. The docs recommend it when one agent needs many possible specializations, you do not need strict constraints between skills, or different teams need to develop capabilities independently.",
+      "source_files": [
+        "langchain/multi-agent/skills.mdx"
+      ],
+      "supporting_passages": [
+        "In the **skills** architecture, specialized capabilities are packaged as invocable \"skills\" that augment an [agent's](/oss/langchain/agents) behavior. Skills are primarily prompt-driven specializations that an agent can invoke on-demand.",
+        "* Prompt-driven specialization: Skills are primarily defined by specialized prompts",
+        "* Progressive disclosure: Skills become available based on context or user needs",
+        "* Team distribution: Different teams can develop and maintain skills independently",
+        "* Lightweight composition: Skills are simpler than full sub-agents",
+        "Use the skills pattern when you want a single [agent](/oss/langchain/agents) with many possible specializations, you don't need to enforce specific constraints between skills, or different teams need to develop capabilities independently."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "How do the docs show a tool reading user-specific long-term memory from a store?",
+      "answer": "The documented pattern is: create an `InMemoryStore`, write user data into it under a namespace and key, define a context schema that carries the user ID, and inside the tool read from `runtime.store` using `runtime.context.user_id`. Then pass the store into `create_agent` and invoke the agent with the matching context so the tool can look up the correct user's record.",
+      "source_files": [
+        "langchain/long-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "store = InMemoryStore() # [!code highlight]",
+        "store.put( # [!code highlight]",
+        "    (\"users\",),  # Namespace to group related data together (users namespace for user data)",
+        "    \"user_123\",  # Key within the namespace (user ID as key)",
+        "    store = runtime.store # [!code highlight]",
+        "    user_id = runtime.context.user_id",
+        "    user_info = store.get((\"users\",), user_id) # [!code highlight]",
+        "    store=store, # [!code highlight]",
+        "    context=Context(user_id=\"user_123\") # [!code highlight]"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What database tools does the SQL agent tutorial expose through `SQLDatabaseToolkit`, and what does the documentation say about using `sql_db_query_checker`?",
+      "answer": "The SQL agent tutorial shows four tools from `SQLDatabaseToolkit`: `sql_db_query`, `sql_db_schema`, `sql_db_list_tables`, and `sql_db_query_checker`. `sql_db_query` executes a detailed SQL query and returns either results or an error message. `sql_db_schema` returns schema information and sample rows for specified tables, and the docs say to verify table existence with `sql_db_list_tables` first. `sql_db_list_tables` returns the database's table names. `sql_db_query_checker` is used to double-check a query before execution, and the docs explicitly say to always use it before running `sql_db_query`.",
+      "source_files": [
+        "langchain/sql-agent.mdx"
+      ],
+      "supporting_passages": [
+        "sql_db_query: Input to this tool is a detailed and correct SQL query, output is a result from the database. If the query is not correct, an error message will be returned. If an error is returned, rewrite the query, check the query, and try again. If you encounter an issue with Unknown column 'xxxx' in 'field list', use sql_db_schema to query the correct table fields.\n\nsql_db_schema: Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables. Be sure that the tables actually exist by calling sql_db_list_tables first! Example Input: table1, table2, table3\n\nsql_db_list_tables: Input is an empty string, output is a comma-separated list of tables in the database.\n\nsql_db_query_checker: Use this tool to double check if your query is correct before executing it. Always use this tool before executing a query with sql_db_query!"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How does the Pregel runtime execute a LangGraph application at a high level?",
+      "answer": "Pregel is LangGraph's runtime for executing graph applications by combining actors and channels. Actors read from channels and write to channels. Execution is organized into repeated steps, and each step has three phases: Plan, which decides which actors should run; Execution, where all selected actors run in parallel; and Update, where the channels are updated with what those actors wrote. During the Execution phase, channel updates are not visible until the next step. The runtime keeps repeating these steps until no actors are selected anymore or a maximum step limit is reached.",
+      "source_files": [
+        "langgraph/pregel.mdx"
+      ],
+      "supporting_passages": [
+        "In LangGraph, Pregel combines [**actors**](https://en.wikipedia.org/wiki/Actor_model) and **channels** into a single application. **Actors** read data from channels and write data to channels. Pregel organizes the execution of the application into multiple steps, following the **Pregel Algorithm**/**Bulk Synchronous Parallel** model.\n\nEach step consists of three phases:\n\n* **Plan**: Determine which **actors** to execute in this step. For example, in the first step, select the **actors** that subscribe to the special **input** channels; in subsequent steps, select the **actors** that subscribe to channels updated in the previous step.\n* **Execution**: Execute all selected **actors** in parallel, until all complete, or one fails, or a timeout is reached. During this phase, channel updates are invisible to actors until the next step.\n* **Update**: Update the channels with the values written by the **actors** in this step.\n\nRepeat until no **actors** are selected for execution, or a maximum number of steps is reached."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "After starting Agent Chat UI, how do you configure it to connect to an agent, and what happens once it is configured?",
+      "answer": "You configure Agent Chat UI by entering three pieces of information: the Graph ID, the Deployment URL, and optionally a LangSmith API key. The Graph ID is your graph name from the `graphs` section of `langgraph.json`. The Deployment URL is your agent server endpoint, such as `http://localhost:2024` for local development or a deployed URL. The LangSmith API key is optional and is not required for a local Agent server. Once this is configured, Agent Chat UI automatically fetches and displays any interrupted threads from the agent.",
+      "source_files": [
+        "langgraph/ui.mdx"
+      ],
+      "supporting_passages": [
+        "After starting Agent Chat UI, you'll need to configure it to connect to your agent:\n\n1. **Graph ID**: Enter your graph name (find this under `graphs` in your `langgraph.json` file)\n2. **Deployment URL**: Your Agent server's endpoint (e.g., `http://localhost:2024` for local development, or your deployed agent's URL)\n3. **LangSmith API key (optional)**: Add your LangSmith API key (not required if you're using a local Agent server)\n\nOnce configured, Agent Chat UI will automatically fetch and display any interrupted threads from your agent."
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "How do you set up human approval for sensitive tool calls in a LangChain agent, including how to resume execution after approval?",
+      "answer": "Use `HumanInTheLoopMiddleware` when creating the agent and configure `interrupt_on` so sensitive tools require approval while safe tools can be auto-approved. Add a checkpointer such as `InMemorySaver()` so state is persisted across interrupts. Then invoke the agent with a config that includes a `thread_id`, because human-in-the-loop requires a thread ID for persistence. When the agent pauses for approval, resume it by invoking again with `Command(resume={\"decisions\": [{\"type\": \"approve\"}]})` and reuse the same thread ID.",
+      "source_files": [
+        "langchain/guardrails.mdx"
+      ],
+      "supporting_passages": [
+        "LangChain provides built-in middleware for requiring human approval before executing sensitive operations. This is one of the most effective guardrails for high-stakes decisions.",
+        "agent = create_agent(\n    model=\"gpt-4.1\",\n    tools=[search_tool, send_email_tool, delete_database_tool],\n    middleware=[\n        HumanInTheLoopMiddleware(\n            interrupt_on={\n                # Require approval for sensitive operations\n                \"send_email\": True,\n                \"delete_database\": True,\n                # Auto-approve safe operations\n                \"search\": False,\n            }\n        ),\n    ],\n    # Persist the state across interrupts\n    checkpointer=InMemorySaver(),\n)\n\n# Human-in-the-loop requires a thread ID for persistence\nconfig = {\"configurable\": {\"thread_id\": \"some_id\"}}\n\n# Agent will pause and wait for approval before executing sensitive tools\nresult = agent.invoke(\n    {\"messages\": [{\"role\": \"user\", \"content\": \"Send an email to the team\"}]},\n    config=config\n)\n\nresult = agent.invoke(\n    Command(resume={\"decisions\": [{\"type\": \"approve\"}]}),\n    config=config  # Same thread ID to resume the paused conversation\n)"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "If you compile a `StateGraph` and then want to render its outputs in a frontend, what runtime object is created and which frontend APIs expose completed node outputs and token-source metadata?",
+      "answer": "Compiling a `StateGraph` produces a `Pregel` instance that can be invoked with input. On the frontend, `useStream` is the API used to consume graph execution. The docs say `stream.values` exposes completed node outputs, and `getMessagesMetadata` identifies which node produced each streaming token.",
+      "source_files": [
+        "langgraph/pregel.mdx",
+        "langgraph/frontend/overview.md"
+      ],
+      "supporting_passages": [
+        "Compiling a @[StateGraph][StateGraph] or creating an @[`@entrypoint`] produces a @[`Pregel`] instance that can be invoked with input.",
+        "On the frontend, `useStream` exposes `stream.values` for completed node outputs and `getMessagesMetadata` for identifying which node produced each streaming token."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "For a human-in-the-loop agent, what is needed so interrupted conversations can be resumed and then shown in Agent Chat UI?",
+      "answer": "To resume interrupted human-in-the-loop conversations, the agent needs persisted state across interrupts and a thread ID for persistence. The docs show using a checkpointer to persist state and passing a `thread_id`; resuming also uses the same thread ID. To show those interrupted conversations in Agent Chat UI, you then configure the UI with the Graph ID, Deployment URL, and optionally a LangSmith API key. After that configuration, Agent Chat UI automatically fetches and displays interrupted threads from the agent.",
+      "source_files": [
+        "langchain/guardrails.mdx",
+        "langgraph/ui.mdx"
+      ],
+      "supporting_passages": [
+        "    # Persist the state across interrupts\n    checkpointer=InMemorySaver(),\n)\n\n# Human-in-the-loop requires a thread ID for persistence\nconfig = {\"configurable\": {\"thread_id\": \"some_id\"}}",
+        "result = agent.invoke(\n    Command(resume={\"decisions\": [{\"type\": \"approve\"}]}),\n    config=config  # Same thread ID to resume the paused conversation\n)",
+        "After starting Agent Chat UI, you'll need to configure it to connect to your agent:\n\n1. **Graph ID**: Enter your graph name (find this under `graphs` in your `langgraph.json` file)\n2. **Deployment URL**: Your Agent server's endpoint (e.g., `http://localhost:2024` for local development, or your deployed agent's URL)\n3. **LangSmith API key (optional)**: Add your LangSmith API key (not required if you're using a local Agent server)\n\nOnce configured, Agent Chat UI will automatically fetch and display any interrupted threads from your agent."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "Which tool argument names are reserved, what are they reserved for, and what happens if you use them anyway?",
+      "answer": "`config` and `runtime` are reserved argument names and cannot be used as tool arguments. `config` is reserved for passing `RunnableConfig` internally, and `runtime` is reserved for the `ToolRuntime` parameter that gives access to state, context, and store. The docs warn that using these names as tool arguments will cause runtime errors. Instead, runtime information should be accessed through the `ToolRuntime` parameter.",
+      "source_files": [
+        "langchain/tools.mdx"
+      ],
+      "supporting_passages": [
+        "The following parameter names are reserved and cannot be used as tool arguments. Using these names will cause runtime errors.\n\n| Parameter name | Purpose |\n|----------------|---------|\n| `config` | Reserved for passing `RunnableConfig` to tools internally |\n| `runtime` | Reserved for `ToolRuntime` parameter (accessing state, context, store) |\n\nTo access runtime information, use the @[`ToolRuntime`] parameter instead of naming your own arguments `config` or `runtime`."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "In LangGraph's Graph API, what defines a graph's default input and output schema, and what happens if a state key has no reducer?",
+      "answer": "By default, the graph's state defines both the input and output schema. Reducers control how updates to each state key are applied independently. If you do not specify a reducer for a key, updates to that key are treated as overrides.",
+      "source_files": [
+        "langgraph/use-graph-api.mdx"
+      ],
+      "supporting_passages": [
+        "By default, graphs will have the same input and output schema, and the state determines that schema. See [Define input and output schemas](#define-input-and-output-schemas) for how to define distinct input and output schemas.",
+        "Each key in the state can have its own independent [reducer](/oss/langgraph/graph-api#reducers) function, which controls how updates from nodes are applied. If no reducer function is explicitly specified then it is assumed that all updates to the key should override it."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What triggers the `INVALID_CONCURRENT_GRAPH_UPDATE` error in LangGraph, and how should you structure state to avoid it during parallel execution?",
+      "answer": "This error happens when a `StateGraph` gets concurrent updates from multiple nodes to the same state property, but that property does not support combining concurrent writes. A common case is fanout or other parallel execution where several nodes return values for the same key in one step. To avoid the error, define the relevant state key with a reducer so LangGraph knows how to combine multiple updates instead of treating them as conflicting overwrites.",
+      "source_files": [
+        "langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE.mdx",
+        "langgraph/use-graph-api.mdx"
+      ],
+      "supporting_passages": [
+        "A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) received concurrent updates to its state from multiple nodes to a state property that doesn't\nsupport it.",
+        "If multiple nodes in e.g. a fanout within a single step return values for `someKey`, the graph will throw this error because\nthere is uncertainty around how to update the internal state.",
+        "This will allow you to define logic that handles the same key returned from multiple nodes executed in parallel.",
+        "Each key in the state can have its own independent [reducer](/oss/langgraph/graph-api#reducers) function, which controls how updates from nodes are applied. If no reducer function is explicitly specified then it is assumed that all updates to the key should override it."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "How do you replay a LangGraph execution from a prior checkpoint?",
+      "answer": "To replay, first run the graph, then inspect its checkpoint history to find the checkpoint you want. Next, call `invoke` with that checkpoint's config. Replay resumes from that point: nodes before the checkpoint are not re-executed because their results are already saved, while nodes after the checkpoint run again. Because replay re-executes nodes, LLM calls, API requests, and interrupts can fire again and produce different results. If you replay from the final checkpoint with no next nodes, nothing happens.",
+      "source_files": [
+        "langgraph/use-time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "Invoke the graph with a prior checkpoint's config to replay from that point.",
+        "Use @[`get_state_history`] to find the checkpoint you want to replay from, then call @[`invoke`][CompiledStateGraph.invoke] with that checkpoint's config:",
+        "Both work by resuming from a prior checkpoint. Nodes before the checkpoint are not re-executed (results are already saved). Nodes after the checkpoint re-execute, including any LLM calls, API requests, and [interrupts](/oss/langgraph/interrupts) (which may produce different results).",
+        "Replay re-executes nodes—it doesn't just read from cache. LLM calls, API requests, and [interrupts](/oss/langgraph/interrupts) fire again and may return different results. Replaying from the final checkpoint (no `next` nodes) is a no-op."
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What does the `MISSING_CHECKPOINTER` error mean, and where must the checkpointer be provided?",
+      "answer": "The error means you are trying to use LangGraph's built-in persistence without supplying a checkpointer. According to the docs, this happens when the `checkpointer` is missing from the `compile()` call for `StateGraph` or from `entrypoint`. The fix is to initialize a checkpointer and pass it into one of those places.",
+      "source_files": [
+        "langgraph/errors/MISSING_CHECKPOINTER.mdx"
+      ],
+      "supporting_passages": [
+        "You are attempting to use built-in LangGraph persistence without providing a checkpointer.",
+        "This happens when a `checkpointer` is missing in the `compile()` method of @[`StateGraph`][StateGraph] or @[`entrypoint`].",
+        "-   Initialize and pass a checkpointer to the `compile()` method of @[`StateGraph`][StateGraph] or @[`entrypoint`]."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "Why can LangChain agents offer durable execution, streaming, human-in-the-loop, and persistence without requiring users to learn LangGraph first, and what problem was LangGraph created to solve?",
+      "answer": "LangChain agents can provide those capabilities because they are built on top of LangGraph. The docs say this gives LangChain agents access to durable execution, streaming, human-in-the-loop, persistence, and more, while users do not need to know LangGraph for basic agent usage. LangGraph itself was created because the original LangChain stack lacked a low-level orchestration layer that let developers control the exact flow of an agent. When LangGraph was built, it added capabilities such as streaming, durable execution, short-term memory, and human-in-the-loop.",
+      "source_files": [
+        "langchain/overview.mdx",
+        "langchain/philosophy.mdx"
+      ],
+      "supporting_passages": [
+        "LangChain [agents](/oss/langchain/agents) are built on top of LangGraph in order to provide durable execution, streaming, human-in-the-loop, persistence, and more. You do not need to know LangGraph for basic LangChain agent usage.",
+        "The original LangChain had two focuses: LLM abstractions, and high-level interfaces for getting started with common applications; however, it was missing a low-level orchestration layer that allowed developers to control the exact flow of their agent. Enter: LangGraph.",
+        "When building LangGraph, we learned from lessons when building LangChain and added functionality we discovered was needed: streaming, durable execution, short-term memory, human-in-the-loop, and more."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "In JavaScript integration tests for a LangGraph workflow, which matcher should you use to verify that a result was interrupted, and why might that interrupt appear again during replay or fork?",
+      "answer": "Use `toHaveBeenInterrupted()` to check that a result contains a LangGraph interrupt; you can also pass a value to match the interrupt payload. The same interrupt may appear again during replay or fork because LangGraph time travel re-executes the node containing the interrupt. The docs state that interrupts are always re-triggered during time travel, and the node pauses again waiting for a new `Command(resume=...)`.",
+      "source_files": [
+        "langchain/test/integration-testing.mdx",
+        "langgraph/use-time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "`toHaveBeenInterrupted()` checks for a `__interrupt__` field in a [LangGraph interrupt](/oss/langchain/human-in-the-loop) result. Pass a value to match the interrupt payload:",
+        "If your graph uses @[`interrupt`] for [human-in-the-loop](/oss/langgraph/interrupts) workflows, interrupts are always re-triggered during time travel. The node containing the interrupt re-executes, and `interrupt()` pauses for a new `Command(resume=...)`."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "When do the docs recommend using LangChain's agents instead of using LangGraph directly?",
+      "answer": "The docs position LangGraph as a very low-level framework focused on orchestration. They recommend learning core building blocks like models and tools before using it. If you are new to agents or want a higher-level abstraction, the recommendation is to use LangChain's agents instead, because they provide prebuilt architectures for common LLM and tool-calling loops.",
+      "source_files": [
+        "langgraph/overview.mdx"
+      ],
+      "supporting_passages": [
+        "LangGraph is very low-level, and focused entirely on agent **orchestration**.",
+        "Before using LangGraph, we recommend you familiarize yourself with some of the components used to build agents, starting with [models](/oss/langchain/models) and [tools](/oss/langchain/tools).",
+        "If you are just getting started with agents or want a higher-level abstraction, we recommend you use LangChain's [agents](/oss/langchain/agents) that provide prebuilt architectures for common LLM and tool-calling loops."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "In the handoffs architecture, how does behavior change over time, and why must a handoff tool include a ToolMessage with the matching tool_call_id when it updates messages?",
+      "answer": "In handoffs, behavior changes dynamically based on persistent state. Tools update a state variable such as `current_step` or `active_agent`, and the system reads that state to change configuration like the system prompt and tools or to route to a different agent. When a handoff tool updates messages, it must include a `ToolMessage` with the matching `tool_call_id` because the LLM expects a response to its tool call. That matching ToolMessage completes the request-response cycle; without it, the conversation history becomes malformed.",
+      "source_files": [
+        "langchain/multi-agent/handoffs.mdx"
+      ],
+      "supporting_passages": [
+        "In the **handoffs** architecture, behavior changes dynamically based on state. The core mechanism: [tools](/oss/langchain/tools) update a state variable (e.g., `current_step` or `active_agent`) that persists across turns, and the system reads this variable to adjust behavior—either applying different configuration (system prompt, tools) or routing to a different [agent](/oss/langchain/agents).",
+        "* State-driven behavior: Behavior changes based on a state variable (e.g., `current_step` or `active_agent`)",
+        "* Tool-based transitions: Tools update the state variable to move between states",
+        "* Persistent state: State survives across conversation turns",
+        "**Why include a `ToolMessage`?** When an LLM calls a tool, it expects a response. The `ToolMessage` with matching `tool_call_id` completes this request-response cycle—without it, the conversation history becomes malformed. This is required whenever your handoff tool updates messages."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What are the documented steps to implement join & rejoin with useStream so a client can disconnect and later reconnect to the same run?",
+      "answer": "The documented flow is: first, capture the `run_id` in the `onCreated` callback. Second, when submitting, enable resumable continuation by passing both `onDisconnect: \"continue\"` and `streamResumable: true`. Third, disconnect the client with `stream.stop()`; this disconnects the client but lets the agent keep processing on the server. Fourth, reconnect later with `stream.joinStream(runId)` using the saved run ID. The docs explicitly say to use both submit options together, because `onDisconnect: \"continue\"` alone keeps the agent running but does not let you rejoin the stream output.",
+      "source_files": [
+        "langchain/frontend/join-rejoin.mdx"
+      ],
+      "supporting_passages": [
+        "The key setup step is capturing the `run_id` from the `onCreated` callback so you can rejoin later.",
+        "When you submit a message, pass `onDisconnect: \"continue\"` and `streamResumable: true` to enable the join/rejoin flow:",
+        "Always use both options together. Setting `onDisconnect: \"continue\"` without `streamResumable: true` means the agent keeps running but you cannot rejoin the stream to see its output.",
+        "Call `stream.stop()` to disconnect the client. The agent continues processing server-side.",
+        "Call `stream.joinStream(runId)` with the saved run ID to reconnect:"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "Compared with subagents, how do handoffs differ in direct user interaction and repeat-request efficiency?",
+      "answer": "Handoffs are much stronger for direct user interaction and more efficient on repeat requests. In the pattern comparison table, handoffs have five stars for direct user interaction, while subagents have one star. The handoffs docs also describe direct user interaction as each state's configuration handling user messages directly. For repeat requests, handoffs use 2 calls on turn 2 and 5 total because the active agent state persists from the previous turn. Subagents use 4 calls again and 8 total because they are stateless by design and repeat the same flow each time.",
+      "source_files": [
+        "langchain/multi-agent/index.mdx",
+        "langchain/multi-agent/handoffs.mdx"
+      ],
+      "supporting_passages": [
+        "| [**Subagents**](/oss/langchain/multi-agent/subagents) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ |",
+        "| [**Handoffs**](/oss/langchain/multi-agent/handoffs) | - | - | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |",
+        "- **Direct user interaction**: Can subagents converse directly with the user?",
+        "* Direct user interaction: Each state's configuration handles user messages directly",
+        "| [**Subagents**](/oss/langchain/multi-agent/subagents) | 4 | 8 | |",
+        "| [**Handoffs**](/oss/langchain/multi-agent/handoffs) | 2 | 5 | ✅ |",
+        "- Subagents are **stateless by design**—each invocation follows the same flow",
+        "- The coffee agent is **still active** from turn 1 (state persists)"
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How does the frontend join/rejoin pattern complement LangGraph's design for long-running, stateful agents?",
+      "answer": "LangGraph is designed as a runtime for long-running, stateful agents, and the join/rejoin frontend pattern complements that by letting the client disconnect without stopping the agent. While the client is away, the agent continues executing server-side, and the client can later resume the same stream. To make that work, the frontend should save the `run_id` from `onCreated`, submit with `onDisconnect: \"continue\"` and `streamResumable: true`, and later call `stream.joinStream(runId)` to reconnect.",
+      "source_files": [
+        "langgraph/overview.mdx",
+        "langchain/frontend/join-rejoin.mdx"
+      ],
+      "supporting_passages": [
+        "LangGraph is a low-level orchestration framework and runtime for building, managing, and deploying long-running, stateful agents.",
+        "Join and rejoin lets you disconnect from a running agent stream without stopping the agent, then reconnect to it later. The agent continues executing server-side while the client is away, and you pick up the stream exactly where you left off.",
+        "The key setup step is capturing the `run_id` from the `onCreated` callback so you can rejoin later.",
+        "When you submit a message, pass `onDisconnect: \"continue\"` and `streamResumable: true` to enable the join/rejoin flow:",
+        "Call `stream.joinStream(runId)` with the saved run ID to reconnect:"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "What streaming caveat applies to structured output tool calls, and how should extraction logic avoid rendering incomplete data?",
+      "answer": "The caveat is that during streaming, the structured output tool call may not yet have complete arguments. The docs say `args` may be partially populated, undefined, or even incomplete JSON until streaming finishes. To avoid rendering incomplete data, you should always check for completeness before rendering, guard extraction logic against missing or partial arguments, and use `requiredFields` to wait until critical fields are populated.",
+      "source_files": [
+        "langchain/frontend/structured-output.mdx"
+      ],
+      "supporting_passages": [
+        "The structured output tool call may not have `args` populated until the agent finishes streaming. During streaming, `args` may be partially populated or undefined. Always check for completeness before rendering.",
+        "During streaming, the tool call arguments may be incomplete JSON. Guard against this in your extraction logic:",
+        "Use the `requiredFields` parameter to wait until critical fields are populated before rendering:"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "What components make up a LangGraph application, and what four pieces of information should be provided for deployment with LangSmith Deployment?",
+      "answer": "A LangGraph application consists of one or more graphs, a `langgraph.json` configuration file, a dependency specification file, and optionally a `.env` file for environment variables. For deployment with LangSmith Deployment, the docs say you should provide four things: the LangGraph configuration file, the graphs that implement the application's logic, a file specifying dependencies, and the environment variables required for the application to run.",
+      "source_files": [
+        "langgraph/application-structure.mdx"
+      ],
+      "supporting_passages": [
+        "A LangGraph application consists of one or more graphs, a configuration file (`langgraph.json`), a file that specifies dependencies, and an optional `.env` file that specifies environment variables.",
+        "To deploy using the LangSmith, the following information should be provided:",
+        "1. A [LangGraph configuration file](#configuration-file-concepts) (`langgraph.json`) that specifies the dependencies, graphs, and environment variables to use for the application.",
+        "2. The [graphs](#graphs) that implement the logic of the application.",
+        "3. A file that specifies [dependencies](#dependencies) required to run the application.",
+        "4. [Environment variables](#environment-variables) that are required for the application to run."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "If you hit MODEL_RATE_LIMIT, which failures are automatically retried by max_retries/maxRetries, which are not retried, and what troubleshooting actions do the docs recommend?",
+      "answer": "The automatic retry behavior covers network errors, rate limits (429), and server errors (5xx), using exponential backoff with jitter. Client errors such as 401 and 404 are not retried. If you hit `MODEL_RATE_LIMIT`, the troubleshooting guidance is to implement rate limiting, implement response caching, distribute requests across multiple providers if your architecture supports it, or contact your provider to request higher rate limits.",
+      "source_files": [
+        "langchain/models.mdx",
+        "langchain/errors/MODEL_RATE_LIMIT.mdx"
+      ],
+      "supporting_passages": [
+        "The maximum number of attempts the system will make to resend a request if it fails due to issues like network timeouts or rate limits. Retries use exponential backoff with jitter. Network errors, rate limits (429), and server errors (5xx) are retried automatically. Client errors such as 401 (unauthorized) or 404 are not retried. For long-running [agent](/oss/deepagents/overview) tasks on unreliable networks, consider increasing this to 10–15.",
+        "You have hit the maximum number of requests that a model provider allows over a given time period and are being temporarily blocked.",
+        "This error occurs when you exceed the maximum number of requests permitted by your model provider within a specific timeframe, resulting in temporary blocking. The restriction is generally temporary and lifts after the limit resets.",
+        "1. **Implement Rate Limiting**: Deploy a rate limiter to regulate the frequency of requests sent to the model. See [rate limiting](/oss/langchain/models#rate-limiting) docs.",
+        "2. **Implement Response Caching**: Use model response caching to reduce redundant requests when incoming queries are repetitive.",
+        "3. **Use Multiple Providers**: Distribute requests across multiple providers if your application architecture supports this approach",
+        "4. **Contact Your Provider**: Reach out to your model provider requesting an increase to your rate limits"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "Why do agents usually fail according to the context engineering guide, and what does \"context engineering\" mean in that framework?",
+      "answer": "The guide says agents usually fail because the LLM call inside the agent takes the wrong action. It gives two root causes: either the underlying model is not capable enough, or the right context was not passed in. The document emphasizes that the second cause is more common. In that framework, context engineering means giving the LLM the right information and tools, in the right format, so it can complete the task reliably.",
+      "source_files": [
+        "langchain/context-engineering.mdx"
+      ],
+      "supporting_passages": [
+        "When agents fail, it's usually because the LLM call inside the agent took the wrong action / didn't do what we expected. LLMs fail for one of two reasons:\n\n1. The underlying LLM is not capable enough\n2. The \"right\" context was not passed to the LLM\n\nMore often than not - it's actually the second reason that causes agents to not be reliable.",
+        "**Context engineering** is providing the right information and tools in the right format so the LLM can accomplish a task. This is the number one job of AI Engineers. This lack of \"right\" context is the number one blocker for more reliable agents, and LangChain's agent abstractions are uniquely designed to facilitate context engineering."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "According to the LangGraph interrupts documentation, what do you need in order to pause execution with `interrupt()`, and how do you resume the graph afterward?",
+      "answer": "To use `interrupt()`, you need three things: a checkpointer so graph state can be persisted, a `thread_id` in the config so LangGraph knows which saved state to resume, and a call to `interrupt()` at the point where you want execution to pause. To resume, invoke the graph again with `Command(resume=...)` using the same thread ID. The resume value becomes the return value of `interrupt()`, and the node starts again from the beginning of the node where the interrupt happened, so code before the interrupt runs again.",
+      "source_files": [
+        "langgraph/interrupts.mdx"
+      ],
+      "supporting_passages": [
+        "To use @[`interrupt`], you need:\n1. A **checkpointer** to persist the graph state (use a durable checkpointer in production)\n2. A **thread ID** in your config so the runtime knows which state to resume from\n3. To call `interrupt()` where you want to pause (payload must be JSON-serializable)",
+        "After an interrupt pauses execution, you resume the graph by invoking it again with a `Command` that contains the resume value. The resume value is passed back to the `interrupt` call, allowing the node to continue execution with the external input.",
+        "- You must use the **same thread ID** when resuming that was used when the interrupt occurred\n- The value passed to `Command(resume=...)` becomes the return value of the @[`interrupt`] call\n- The node restarts from the beginning of the node where the @[`interrupt`] was called when resumed, so any code before the @[`interrupt`] runs again\n- You can pass any JSON-serializable value as the resume value"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "In the subagents architecture, where is conversation memory kept, and how can a subagent still collect clarification or approval from the user when needed?",
+      "answer": "Conversation memory is kept by the main agent, not by the subagents. The subagents are stateless, which gives each invocation a clean context window and prevents context bloat. If a subagent needs clarification or approval, it can use LangGraph interrupts inside the subagent. Interrupts pause execution and wait for external input, so the main agent stays the orchestrator while the subagent can gather the needed user input mid-task.",
+      "source_files": [
+        "langchain/multi-agent/subagents.mdx",
+        "langgraph/interrupts.mdx"
+      ],
+      "supporting_passages": [
+        "Subagents are stateless—they don't remember past interactions, with all conversation memory maintained by the main agent. This provides [context](/oss/langchain/context-engineering) isolation: each subagent invocation works in a clean context window, preventing context bloat in the main conversation.",
+        "* No direct user interaction: Subagents return results to the main agent, not the user (though you can use [interrupts](/oss/langgraph/interrupts#pause-using-interrupt) within a subagent to allow user interaction)",
+        "**Need user interaction within a subagent?** While subagents typically return results to the main agent rather than conversing directly with users, you can use [interrupts](/oss/langgraph/interrupts#pause-using-interrupt) within a subagent to pause execution and gather user input. This is useful when a subagent needs clarification or approval before proceeding. The main agent remains the orchestrator, but the subagent can collect information from the user mid-task.",
+        "Interrupts allow you to pause graph execution at specific points and wait for external input before continuing."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "What unexpected prompt-template mistake can trigger `INVALID_PROMPT_INPUT` when you include JSON in a prompt, and how should you escape braces to fix it?",
+      "answer": "A surprising cause is putting a JSON object directly into a prompt template without escaping its curly braces. In that case, the template engine treats the JSON braces as additional input variables, which can trigger `INVALID_PROMPT_INPUT`. The fix is to escape the braces: use `{{` for single braces in f-strings, and `{{{{` for double braces in f-strings.",
+      "source_files": [
+        "langchain/errors/INVALID_PROMPT_INPUT.mdx"
+      ],
+      "supporting_passages": [
+        "One unexpected way this can occur is if you add a JSON object directly into a prompt template:",
+        "You might think that the above prompt template should require a single input key named question, but the JSON object will be interpreted as an additional variable because the curly braces (`{`) are not escaped, and should be preceded by a second brace instead, like this:",
+        "1. Review your prompt template for correctness. When using f-string formats, ensure proper escaping of curly braces:\n   * Use `{{` for single braces in f-strings\n   * Use `{{{{` for double braces in f-strings"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "How can you unit-test multi-turn, state-dependent agent behavior in Python without making real API calls?",
+      "answer": "Use an in-memory fake model instead of a real LLM, and add an in-memory checkpointer so state persists across turns. Specifically, LangChain provides `GenericFakeChatModel` for scripted responses, and `InMemorySaver` for persistence during testing. Create the agent with the fake model and `checkpointer=InMemorySaver()`, then invoke it multiple times with the same `thread_id`. That lets you simulate multi-turn behavior where information from the first turn is available on the second turn, while keeping tests fast, free, and repeatable.",
+      "source_files": [
+        "langchain/test/unit-testing.mdx"
+      ],
+      "supporting_passages": [
+        "Unit tests exercise small, deterministic pieces of your agent in isolation. By replacing the real LLM with an in-memory fake (AKA fixture), you can script exact responses (text, tool calls, and errors) so tests are fast, free, and repeatable without API keys.",
+        "LangChain provides @[`GenericFakeChatModel`] for mocking text responses. It accepts an iterator of responses (@[`AIMessage`] objects or strings) and returns one per invocation. It supports both regular and streaming usage.",
+        "To enable persistence during testing, you can use the @[`InMemorySaver`] checkpointer. This allows you to simulate multiple turns to test state-dependent behavior:",
+        "agent = create_agent(\n    model,\n    tools=[],\n    checkpointer=InMemorySaver()\n)\n\n# First invocation\nagent.invoke(\n    {\"messages\": [HumanMessage(content=\"I live in Sydney, Australia\")]},\n    config={\"configurable\": {\"thread_id\": \"session-1\"}}\n)\n\n# Second invocation: the first message is persisted (Sydney location), so the model returns GMT+10 time\nagent.invoke(\n    {\"messages\": [HumanMessage(content=\"What's my local time?\")]},\n    config={\"configurable\": {\"thread_id\": \"session-1\"}}\n)"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "Which two RAG implementations does the LangChain RAG tutorial say it will demonstrate, and which one is described as fast and effective for simple queries?",
+      "answer": "The tutorial says it will demonstrate two approaches: a RAG agent that executes searches with a simple tool, and a two-step RAG chain that uses a single LLM call per query. The two-step RAG chain is the one described as fast and effective for simple queries.",
+      "source_files": [
+        "langchain/rag.mdx"
+      ],
+      "supporting_passages": [
+        "We will demonstrate:\n\n1. A RAG [agent](#rag-agents) that executes searches with a simple tool. This is a good general-purpose implementation.\n2. A two-step RAG [chain](#rag-chains) that uses just a single LLM call per query. This is a fast and effective method for simple queries."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "What fields does a `HITLRequest` interrupt payload contain, and what does each one represent?",
+      "answer": "A `HITLRequest` has two top-level fields: `actionRequests` and `reviewConfigs`. `actionRequests` is the list of actions the agent wants to perform, and each action includes the action name, structured arguments, and an optional human-readable description. `reviewConfigs` contains per-action review settings, especially which human decisions are allowed, such as approve, reject, or edit.",
+      "source_files": [
+        "langchain/frontend/human-in-the-loop.mdx"
+      ],
+      "supporting_passages": [
+        "When the agent pauses, `stream.interrupt` contains a `HITLRequest` with the\nfollowing structure:\n\n```ts\ninterface HITLRequest {\n  actionRequests: ActionRequest[];\n  reviewConfigs: ReviewConfig[];\n}\n\ninterface ActionRequest {\n  action: string;\n  args: Record<string, unknown>;\n  description?: string;\n}\n\ninterface ReviewConfig {\n  allowedDecisions: (\"approve\" | \"reject\" | \"edit\")[];\n}\n```",
+        "| `actionRequests` | Array of pending actions the agent wants to perform |\n| `actionRequests[].action` | The action name (e.g. `\"send_email\"`, `\"delete_record\"`) |\n| `actionRequests[].args` | Structured arguments for the action |\n| `actionRequests[].description` | Optional human-readable description of what the action does |\n| `reviewConfigs` | Per-action configuration controlling which decisions are allowed |\n| `reviewConfigs[].allowedDecisions` | Which buttons to show: `\"approve\"`, `\"reject\"`, `\"edit\"` |"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "After a user reviews a pending action in the Human-in-the-Loop pattern, how does the agent resume execution?",
+      "answer": "First, the agent pauses and emits an interrupt payload, and `useStream` exposes it through `stream.interrupt` so the UI can render review options. After the user approves, rejects, or edits the action, your code calls `stream.submit(null, { command: { resume: hitlResponse } })`. `useStream` sends that resume command to the LangGraph backend, the agent receives the `HITLResponse` and continues, approved actions run with original or edited arguments, rejected actions pass a reason back to the agent, and `interrupt` resets to `null` as streaming resumes.",
+      "source_files": [
+        "langchain/frontend/human-in-the-loop.mdx"
+      ],
+      "supporting_passages": [
+        "When the agent hits an interrupt:\n\n1. The agent stops executing and emits an interrupt payload\n2. The `useStream` hook surfaces the interrupt via `stream.interrupt`\n3. Your UI renders a review card with approve/reject/edit options\n4. The user makes a decision\n5. Your code calls `stream.submit()` with a resume command\n6. The agent picks up where it left off",
+        "After the user makes a decision, the full cycle looks like this:\n\n1. Call `stream.submit(null, { command: { resume: hitlResponse } })`\n2. The `useStream` hook sends the resume command to the LangGraph backend\n3. The agent receives the `HITLResponse` and continues execution\n4. If approved, the tool runs with the original (or edited) arguments\n5. If rejected, the agent receives the reason and decides its next step\n6. The `interrupt` property resets to `null` as the agent resumes streaming"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "How should a reasoning-token UI handle three edge cases: messages with no reasoning blocks, empty reasoning blocks, and messages that alternate between reasoning and text?",
+      "answer": "If an AI message has only text blocks, render a normal message bubble and do not show a ThinkingBubble. If the model emits empty reasoning placeholders, filter out reasoning blocks whose trimmed content length is zero. If reasoning and text alternate within one message and you need to preserve that sequence, iterate through `contentBlocks` in order instead of grouping all reasoning together and all text together.",
+      "source_files": [
+        "langchain/frontend/reasoning-tokens.mdx"
+      ],
+      "supporting_passages": [
+        "### Messages without reasoning\n\nNot every AI message will contain reasoning blocks. When `contentBlocks` has only text blocks, render a standard message bubble without the ThinkingBubble.",
+        "### Empty reasoning blocks\n\nSome models produce empty reasoning blocks as placeholders. Filter these out:\n\n```ts\nconst meaningfulReasoning = message.contentBlocks\n  .filter((b) => b.type === \"reasoning\" && b.reasoning.trim().length > 0);\n```",
+        "### Multiple reasoning-text cycles\n\nA single message can alternate between reasoning and text blocks. If you need to preserve this interleaving, iterate `contentBlocks` in order rather than grouping by type:\n\n```ts\nmessage.contentBlocks.forEach((block) => {\n  if (block.type === \"reasoning\") {\n    // Render ThinkingBubble\n  } else if (block.type === \"text\") {\n    // Render text paragraph\n  }\n});\n```"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "How does `stream.submit` differ between the Human-in-the-Loop and Time Travel frontend patterns?",
+      "answer": "Both patterns call `submit` with `null` as the first argument, but they use different second arguments for different purposes. Human-in-the-Loop uses `stream.submit(null, { command: { resume: hitlResponse } })` to send a `HITLResponse` back so the agent can continue from a human review decision. Time Travel uses `stream.submit(null, { checkpoint: selectedCheckpoint.checkpoint })` to resume from a prior checkpoint, which rolls the agent back to that checkpoint's state, re-executes from there, and streams the new results.",
+      "source_files": [
+        "langchain/frontend/human-in-the-loop.mdx",
+        "langchain/frontend/time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "1. Call `stream.submit(null, { command: { resume: hitlResponse } })`\n2. The `useStream` hook sends the resume command to the LangGraph backend\n3. The agent receives the `HITLResponse` and continues execution",
+        "The core of time travel is the ability to **resume execution from any prior\ncheckpoint**. When a user selects a checkpoint, call `submit` with `null` input\nand pass the checkpoint reference:\n\n```ts\nstream.submit(null, { checkpoint: selectedCheckpoint.checkpoint });\n```",
+        "This tells LangGraph to:\n\n1. Roll back to the selected checkpoint's state\n2. Re-execute the graph from that point forward\n3. Stream the new results to the client"
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How do LangGraph checkpoints make short-term memory resumable, and what happens when you resume from a checkpoint?",
+      "answer": "LangGraph short-term memory is the agent's thread-scoped state, and that state is persisted using a checkpointer so the thread can be resumed. Time Travel works because every state change creates a checkpoint snapshot of that state, and each persisted snapshot is represented as a `ThreadState`. When you resume from a checkpoint, LangGraph rolls back to that saved state, re-executes the graph from that point forward, and streams the new results to the client.",
+      "source_files": [
+        "langgraph/memory.mdx",
+        "langchain/frontend/time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "* [Short-term memory](#short-term-memory), or [thread](/oss/langgraph/persistence#threads)-scoped memory, tracks the ongoing conversation by maintaining message history within a session. LangGraph manages short-term memory as a part of your agent's [state](/oss/langgraph/graph-api#state). State is persisted to a database using a [checkpointer](/oss/langgraph/persistence#checkpoints) so the thread can be resumed at any time. Short-term memory updates when the graph is invoked or a step is completed, and the State is read at the start of each step.",
+        "Every state change in a LangGraph agent creates a **checkpoint**, a complete\nsnapshot of the agent's state at that moment. Time travel lets you inspect any\ncheckpoint, view the exact state the agent held, and **resume execution from\nthat point** to explore alternative paths.",
+        "LangGraph persists agent state after every node execution. Each persisted state\nis a `ThreadState` object that captures:",
+        "This tells LangGraph to:\n\n1. Roll back to the selected checkpoint's state\n2. Re-execute the graph from that point forward\n3. Stream the new results to the client"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "In the customer-support state machine tutorial, what is the role of `current_step`, and how do the tools advance the workflow?",
+      "answer": "`current_step` is the key field that determines which agent configuration, meaning which prompt and tools, is active on each turn. The workflow tools advance the state machine by returning `Command` objects that update both the business data and `current_step`. In the example, `record_warranty_status` moves the workflow to `issue_classifier`, and `record_issue_type` moves it to `resolution_specialist`.",
+      "source_files": [
+        "langchain/multi-agent/handoffs-customer-support.mdx"
+      ],
+      "supporting_passages": [
+        "The `current_step` field is the core of the state machine pattern - it determines which configuration (prompt + tools) is loaded on each turn.",
+        "Notice how `record_warranty_status` and `record_issue_type` return `Command` objects that update both the data (`warranty_status`, `issue_type`) AND the `current_step`. This is how the state machine works - tools control workflow progression.",
+        "\"current_step\": \"issue_classifier\",  # [!code highlight]",
+        "\"current_step\": \"resolution_specialist\",  # [!code highlight]"
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What are the main steps to deploy an agent to LangSmith Cloud and then access or test the deployed app?",
+      "answer": "First, make sure you have both a GitHub account and a LangSmith account. Put your app in a GitHub repository, make sure it is LangGraph-compatible, and then create a new deployment in LangSmith, linking the repository if necessary and submitting it. After deployment, open the deployment details, launch Studio to view the graph, copy the API URL, and test the deployment by installing the LangGraph SDK and sending a streamed run to the agent using the deployment URL and your LangSmith API key.",
+      "source_files": [
+        "langgraph/deploy.mdx"
+      ],
+      "supporting_passages": [
+        "This guide shows you how to deploy your agent to **[LangSmith Cloud](/langsmith/deploy-to-cloud)**, a fully managed hosting platform designed for agent workloads. With Cloud deployment, you can deploy directly from your GitHub repository—LangSmith handles the infrastructure, scaling, and operational concerns.",
+        "Before you begin, ensure you have the following:\n\n- A [GitHub account](https://github.com/)\n- A [LangSmith account](https://smith.langchain.com/) (free to sign up)",
+        "Your application's code must reside in a GitHub repository to be deployed on LangSmith. Both public and private repositories are supported. For this quickstart, first make sure your app is LangGraph-compatible by following the [local server setup guide](/oss/langgraph/studio#set-up-local-agent-server). Then, push your code to the repository.",
+        "Log in to [LangSmith](https://smith.langchain.com/). In the left sidebar, select **Deployments**.",
+        "Click the **+ New Deployment** button. A pane will open where you can fill in the required fields.",
+        "If you are a first time user or adding a private repository that has not been previously connected, click the **Add new account** button and follow the instructions to connect your GitHub account.",
+        "Select your application's repository. Click **Submit** to deploy. This may take about 15 minutes to complete. You can check the status in the **Deployment details** view.",
+        "Once your application is deployed:\n\n1. Select the deployment you just created to view more details.\n2. Click the **Studio** button in the top right corner. Studio will open to display your graph.",
+        "1. In the **Deployment details** view in LangGraph, click the **API URL** to copy it to your clipboard.\n2. Click the `URL` to copy it to the clipboard.",
+        "1. Install LangGraph SDK:\n```shell\nnpm install @langchain/langgraph-sdk\n```\n2. Send a message to the agent:\n```ts\nimport { Client } from \"@langchain/langgraph-sdk\";\n\nconst client = new Client({ apiUrl: \"your-deployment-url\", apiKey: \"your-langsmith-api-key\" });\n\nconst streamResponse = client.runs.stream(\n  null,    // Threadless run\n  \"agent\", // Name of agent. Defined in langgraph.json.\n  {\n    input: {\n      \"messages\": [\n        { \"role\": \"user\", \"content\": \"What is LangGraph?\"}\n      ]\n    },\n    streamMode: \"messages\",\n  }\n);\n\nfor await (const chunk of streamResponse) {\n  console.log(`Receiving new event of type: ${chunk.event}...`);\n  console.log(JSON.stringify(chunk.data));\n  console.log(\"\\n\\n\");\n}\n```"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What URLs does `langgraph dev` expose for the local API and Studio UI by default?",
+      "answer": "By default, `langgraph dev` exposes the local API at `http://127.0.0.1:2024` and the Studio UI at `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`.",
+      "source_files": [
+        "langgraph/local-server.mdx"
+      ],
+      "supporting_passages": [
+        "- 🚀 API: http://127.0.0.1:2024",
+        "- 🎨 Studio UI: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "What does LangGraph persistence do, and what major capabilities does it enable?",
+      "answer": "LangGraph persistence saves graph state as checkpoints at every step of execution and organizes those checkpoints into threads. According to the docs, this enables human-in-the-loop workflows, conversational memory, time travel debugging, fault-tolerant execution, and pending writes so successful nodes do not have to be rerun after a failure in the same super-step.",
+      "source_files": [
+        "langgraph/persistence.mdx"
+      ],
+      "supporting_passages": [
+        "LangGraph has a built-in persistence layer that saves graph state as checkpoints. When you compile a graph with a checkpointer, a snapshot of the graph state is saved at every step of execution, organized into threads. This enables human-in-the-loop workflows, conversational memory, time travel debugging, and fault-tolerant execution.",
+        "- **Human-in-the-loop**: Checkpointers facilitate [human-in-the-loop workflows](/oss/langgraph/interrupts) by allowing humans to inspect, interrupt, and approve graph steps. Checkpointers are needed for these workflows as the person has to be able to view the state of a graph at any point in time, and the graph has to be able to resume execution after the person has made any updates to the state. See [Interrupts](/oss/langgraph/interrupts) for examples.",
+        "- **Memory**: Checkpointers allow for [\"memory\"](/oss/concepts/memory) between interactions. In the case of repeated human interactions (like conversations) any follow up messages can be sent to that thread, which will retain its memory of previous ones. See [Add memory](/oss/langgraph/add-memory) for information on how to add and manage conversation memory using checkpointers.",
+        "- **Time travel**: Checkpointers allow for [\"time travel\"](/oss/langgraph/use-time-travel), allowing users to replay prior graph executions to review and / or debug specific graph steps. In addition, checkpointers make it possible to fork the graph state at arbitrary checkpoints to explore alternative trajectories.",
+        "- **Fault-tolerance**: Checkpointing provides fault-tolerance and error recovery: if one or more nodes fail at a given superstep, you can restart your graph from the last successful step.",
+        "- **Pending writes**: When a graph node fails mid-execution at a given [super-step](#super-steps), LangGraph stores pending checkpoint writes from any other nodes that completed successfully at that super-step. When you resume graph execution from that super-step you don't re-run the successful nodes."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "If `INVALID_CHAT_HISTORY` happens because execution was interrupted before the `tools` node returned `ToolMessage`s, how can you recover?",
+      "answer": "The docs give two recovery paths. First, you can provide matching `ToolMessage` objects and invoke the graph again; this appends those messages to history and runs the graph from the START node. Second, you can manually repair and resume the interrupted state: get the recent messages from `graph.get_state(config)`, remove unanswered tool calls or add matching `ToolMessage` objects, call `graph.update_state(config, {'messages': ...})`, and then resume with `graph.invoke(None, config)`.",
+      "source_files": [
+        "langgraph/errors/INVALID_CHAT_HISTORY.mdx"
+      ],
+      "supporting_passages": [
+        "2. The graph was interrupted before receiving updates from the `tools` node (i.e. a list of @[`ToolMessage`])\n    and you invoked it with an input that is not None or a ToolMessage,\n    e.g. `graph.invoke({'messages': [HumanMessage(...)]}, config)`.\n    This interrupt could have been triggered in one of the following ways:\n        * You manually set `interrupt_before = ['tools']` in `create_agent`\n    * One of the tools raised an error that wasn't handled by the @[`ToolNode`] (`\"tools\"`)",
+        "* provide @[`ToolMessage`] objects that match existing tool calls and call `graph.invoke({'messages': [ToolMessage(...)]})`.\n  **NOTE**: this will append the messages to the history and run the graph from the START node.",
+        "  * manually update the state and resume the graph from the interrupt:\n    1. get the list of most recent messages from the graph state with `graph.get_state(config)`\n    2. modify the list of messages to either remove unanswered tool calls from AIMessages\n\nor add @[`ToolMessage`] objects with `tool_call_ids` that match unanswered tool calls 3. call `graph.update_state(config, {'messages': ...})` with the modified list of messages 4. resume the graph, e.g. call `graph.invoke(None, config)`"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What Safari-specific limitation affects Studio when connecting to a local LangGraph server, and what workaround is recommended?",
+      "answer": "Safari can block or limit Studio connections to localhost servers. The recommended workaround is to start the dev server with `--tunnel` so Studio connects through a secure tunnel; in Studio, you may also need to manually add the tunnel URL to allowed origins.",
+      "source_files": [
+        "langgraph/studio.mdx",
+        "langgraph/local-server.mdx"
+      ],
+      "supporting_passages": [
+        "Safari blocks `localhost` connections to Studio. To work around this, run the above command with `--tunnel` to access Studio via a secure tunnel. You'll need to manually add the tunnel URL to allowed origins by clicking **Connect to a local server** in the Studio UI. See the [troubleshooting guide](/langsmith/troubleshooting-studio#safari-connection-issues) for steps.",
+        "Use the `--tunnel` flag with your command to create a secure tunnel, as Safari has limitations when connecting to localhost servers:"
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "If you run a LangGraph app locally with `langgraph dev`, do you need to configure checkpointers yourself, and what is the production caveat of that mode?",
+      "answer": "No. When you use Agent Server, checkpointing is handled automatically, so you do not need to implement or configure checkpointers manually. However, `langgraph dev` runs Agent Server in an in-memory mode intended for development and testing; for production, the docs say to deploy Agent Server with access to a persistent storage backend.",
+      "source_files": [
+        "langgraph/persistence.mdx",
+        "langgraph/local-server.mdx"
+      ],
+      "supporting_passages": [
+        "**Agent Server handles checkpointing automatically**\nWhen using the [Agent Server](/langsmith/agent-server), you don't need to implement or configure checkpointers manually. The server handles all persistence infrastructure for you behind the scenes.",
+        "The `langgraph dev` command starts Agent Server in an in-memory mode. This mode is suitable for development and testing purposes. For production use, deploy Agent Server with access to a persistent storage backend. For more information, see the [Platform setup overview](/langsmith/platform-setup)."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "What happens if you cancel a queued message after the agent has already started processing it, and what should you use instead?",
+      "answer": "Canceling a queue entry only affects messages that have not started processing yet. If the agent is already processing that message, canceling it from the queue does nothing; you should use `stream.stop()` to interrupt the current run.",
+      "source_files": [
+        "langchain/frontend/message-queues.mdx"
+      ],
+      "supporting_passages": [
+        "Cancelling a queue entry only affects messages that have **not yet started\nprocessing**. If the agent is already working on a message, cancelling it from\nthe queue has no effect. Use `stream.stop()` to interrupt the current run."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "What is the difference between static runtime context, dynamic runtime context, and dynamic cross-conversation context in LangGraph?",
+      "answer": "LangGraph distinguishes these context types by whether the data changes and how long it lasts. Static runtime context is immutable per run: it is passed in at the start of execution and does not change during that run. Dynamic runtime context is mutable within a single run: it lives in the LangGraph state object and acts as short-term memory for things like conversation history and intermediate results. Dynamic cross-conversation context is persistent and mutable across runs: it is stored in the LangGraph store and acts as long-term memory for facts such as user profiles, preferences, and prior interactions.",
+      "source_files": [
+        "concepts/context.mdx"
+      ],
+      "supporting_passages": [
+        "**Static runtime context** represents immutable data like user metadata, tools, and database connections that are passed to an application at the start of a run via the `context` argument to `invoke`/`stream`. This data does not change during execution.",
+        "**Dynamic runtime context** represents mutable data that can evolve during a single run and is managed through the LangGraph state object. This includes conversation history, intermediate results, and values derived from tools or LLM outputs. In LangGraph, the state object acts as [short-term memory](/oss/concepts/memory) during a run.",
+        "**Dynamic cross-conversation context** represents persistent, mutable data that spans across multiple conversations or sessions and is managed through the LangGraph store. This includes user profiles, preferences, and historical interactions. The LangGraph store acts as [long-term memory](/oss/concepts/memory#long-term-memory) across multiple runs. This can be used to read or update persistent facts (e.g., user profiles, preferences, prior interactions)."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "In LangGraph's Functional API, how do you pass multiple inputs to an `entrypoint`?",
+      "answer": "An `entrypoint` only accepts input through its first function argument. If you need to provide multiple values, the docs say to bundle them into a dictionary and pass that dictionary as the single input.",
+      "source_files": [
+        "langgraph/use-functional-api.mdx"
+      ],
+      "supporting_passages": [
+        "When defining an `entrypoint`, input is restricted to the first argument of the function. To pass multiple inputs, you can use a dictionary."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "What do you need to do to leverage durable execution in LangGraph?",
+      "answer": "The docs list three required steps. First, enable persistence by configuring a checkpointer so workflow progress is saved. Second, provide a thread identifier when executing the workflow so LangGraph can track that run's history. Third, wrap non-deterministic operations and side effects inside tasks so resumed workflows can reuse persisted results instead of repeating those operations.",
+      "source_files": [
+        "langgraph/durable-execution.mdx"
+      ],
+      "supporting_passages": [
+        "To leverage durable execution in LangGraph, you need to:",
+        "1. Enable [persistence](/oss/langgraph/persistence) in your workflow by specifying a [checkpointer](/oss/langgraph/persistence#checkpointer-libraries) that will save workflow progress.",
+        "2. Specify a [thread identifier](/oss/langgraph/persistence#threads) when executing a workflow. This will track the execution history for a particular instance of the workflow.",
+        "1. Wrap any non-deterministic operations (e.g., random number generation) or operations with side effects (e.g., file writes, API calls) inside @[tasks][task] to ensure that when a workflow is resumed, these operations are not repeated for the particular run, and instead their results are retrieved from the persistence layer."
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "If you are writing a Python Functional API workflow and want persisted results plus resumability for a specific run without repeating side effects, what configuration and coding pattern do the docs recommend?",
+      "answer": "Use a checkpointer on the Functional API entrypoint, invoke the workflow with a `thread_id`, and put side effects or non-deterministic work inside tasks. In the Functional API examples, the workflow is defined with `@entrypoint(checkpointer=checkpointer)` and invoked with `config = {\"configurable\": {\"thread_id\": str(uuid.uuid4())}}`. The durable execution docs add that using a checkpointer enables durable execution, and that side effects or non-deterministic operations should be wrapped in tasks so a resumed run does not repeat them.",
+      "source_files": [
+        "langgraph/use-functional-api.mdx",
+        "langgraph/durable-execution.mdx"
+      ],
+      "supporting_passages": [
+        "@entrypoint(checkpointer=checkpointer)",
+        "config = {\"configurable\": {\"thread_id\": str(uuid.uuid4())}}",
+        "If you are using LangGraph with a checkpointer, you already have durable execution enabled. You can pause and resume workflows at any point, even after interruptions or failures.",
+        "Specify a [thread identifier](/oss/langgraph/persistence#threads) when executing a workflow. This will track the execution history for a particular instance of the workflow.",
+        "To make the most of durable execution, ensure that your workflow is designed to be [deterministic](#determinism-and-consistent-replay) and [idempotent](#determinism-and-consistent-replay) and wrap any side effects or non-deterministic operations inside [tasks](/oss/langgraph/functional-api#task)."
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "In Python structured output, what should you do if native structured-output support data are unavailable, and what extra requirement applies if you also pass tools?",
+      "answer": "If support data are unavailable, the docs say to use another condition or specify support manually, for example by providing a custom model profile that sets `structured_output` to `True`. They also warn that if you pass tools, the model must support using tools and structured output at the same time.",
+      "source_files": [
+        "langchain/structured-output.mdx"
+      ],
+      "supporting_passages": [
+        "Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.",
+        "If tools are specified, the model must support simultaneous use of tools and structured output."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "Why does the LangGraph guide recommend storing raw data in state instead of formatted prompts?",
+      "answer": "The guide says state should hold raw data and prompts should be formatted inside nodes only when needed. This keeps the same underlying data reusable across nodes, lets you change prompt templates without changing the state schema, makes debugging clearer because you can see the exact data each node received, and helps the agent evolve without breaking existing state.",
+      "source_files": [
+        "langgraph/thinking-in-langgraph.mdx"
+      ],
+      "supporting_passages": [
+        "A key principle: your state should store raw data, not formatted text. Format prompts inside nodes when you need them.",
+        "This separation means:\n\n- Different nodes can format the same data differently for their needs\n- You can change prompt templates without modifying your state schema\n- Debugging is clearer—you see exactly what data each node received\n- Your agent can evolve without breaking existing state",
+        "Notice that the state contains only raw data—no prompt templates, no formatted strings, no instructions. The classification output is stored as a single dictionary, straight from the LLM."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What three kinds of information are available on LangGraph's `Runtime` object?",
+      "answer": "The `Runtime` object exposes three categories of information: context, store, and stream writer. Context contains static per-invocation information such as user IDs or database connections. Store provides access to long-term memory. Stream writer is used to stream information through the `custom` stream mode.",
+      "source_files": [
+        "langchain/runtime.mdx"
+      ],
+      "supporting_passages": [
+        "LangGraph exposes a @[`Runtime`] object with the following information:\n\n1. **Context**: static information like user id, db connections, or other dependencies for an agent invocation\n2. **Store**: a @[BaseStore] instance used for [long-term memory](/oss/langchain/long-term-memory)\n3. **Stream writer**: an object used for streaming information via the `\"custom\"` stream mode"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "In LangGraph streaming, what fields does each streamed chunk contain in `version=\"v2\"`, and how does that differ from the default v1 behavior?",
+      "answer": "In `version=\"v2\"`, every streamed chunk uses one unified `StreamPart` shape with three top-level fields: `type`, `ns`, and `data`. `type` identifies the stream mode, `ns` is the namespace tuple used for subgraph events, and `data` holds the payload. By contrast, in the default v1 format, the output shape changes depending on how streaming is configured: a single mode returns raw data, multiple modes return `(mode, data)` tuples, and subgraph streaming returns `(namespace, data)` tuples.",
+      "source_files": [
+        "langgraph/streaming.mdx"
+      ],
+      "supporting_passages": [
+        "Pass `version=\"v2\"` to `stream()` or `astream()` to get a unified output format. Every chunk is a `StreamPart` dict with a consistent shape — regardless of stream mode, number of modes, or subgraph settings:",
+        "{\n    \"type\": \"values\" | \"updates\" | \"messages\" | \"custom\" | \"checkpoints\" | \"tasks\" | \"debug\",\n    \"ns\": (),           # namespace tuple, populated for subgraph events\n    \"data\": ...,        # the actual payload (type varies by stream mode)\n}",
+        "With v1 (default), the output format changes based on your streaming options (single mode returns raw data, multiple modes return `(mode, data)` tuples, subgraphs return `(namespace, data)` tuples). With v2, the format is always the same:"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "When should you call a subgraph inside a node instead of adding the subgraph directly as a node in LangGraph?",
+      "answer": "You should call a subgraph inside a node when the parent graph and subgraph have different state schemas, when they do not share keys, or when you need to transform state between the parent and subgraph. In that pattern, you write a wrapper function that maps parent state into subgraph input and maps subgraph output back into parent state. If the parent and subgraph share state keys, you can add the compiled subgraph directly as a node with no wrapper function.",
+      "source_files": [
+        "langgraph/use-subgraphs.mdx"
+      ],
+      "supporting_passages": [
+        "| [Call a subgraph inside a node](#call-a-subgraph-inside-a-node) | Parent and subgraph have **different state schemas** (no shared keys), or you need to transform state between them | You write a wrapper function that maps parent state to subgraph input and subgraph output back to parent state |",
+        "| [Add a subgraph as a node](#add-a-subgraph-as-a-node) | Parent and subgraph **share state keys**—the subgraph reads from and writes to the same channels as the parent | You pass the compiled subgraph directly to `add_node`—no wrapper function needed |"
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "How do you set up and use Human-in-the-Loop in Python so an agent pauses for review and can later resume execution?",
+      "answer": "First, add `HumanInTheLoopMiddleware` to the agent's `middleware` list when creating the agent, and configure `interrupt_on` for the tool actions you want reviewed. Second, configure a checkpointer, because HITL relies on persisted graph state across interrupts; the docs show `InMemorySaver()` for testing or prototyping. Third, when invoking the agent, pass a `config` containing a `thread_id` so the paused execution is associated with a conversation thread. Fourth, call the agent with `version=\"v2\"` and inspect `result.interrupts` to see the actions that need review. Finally, resume execution on the same thread by invoking the agent again with a `Command` whose `resume` field contains the reviewer decisions, such as `approve` or `reject`.",
+      "source_files": [
+        "langchain/human-in-the-loop.mdx"
+      ],
+      "supporting_passages": [
+        "To use HITL, add the [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) to the agent's `middleware` list when creating the agent.",
+        "from langchain.agents import create_agent\nfrom langchain.agents.middleware import HumanInTheLoopMiddleware # [!code highlight]\nfrom langgraph.checkpoint.memory import InMemorySaver # [!code highlight]\n\n\nagent = create_agent(\n    model=\"gpt-4.1\",\n    tools=[write_file_tool, execute_sql_tool, read_data_tool],\n    middleware=[\n        HumanInTheLoopMiddleware( # [!code highlight]\n            interrupt_on={\n                \"write_file\": True,  # All decisions (approve, edit, reject) allowed\n                \"execute_sql\": {\"allowed_decisions\": [\"approve\", \"reject\"]},  # No editing allowed\n                # Safe operation, no approval needed\n                \"read_data\": False,\n            },\n            # Prefix for interrupt messages - combined with tool name and args to form the full message\n            # e.g., \"Tool execution pending approval: execute_sql with query='DELETE FROM...'\"\n            # Individual tools can override this by specifying a \"description\" in their interrupt config\n            description_prefix=\"Tool execution pending approval\",\n        ),\n    ],\n    # Human-in-the-loop requires checkpointing to handle interrupts.\n    # In production, use a persistent checkpointer like AsyncPostgresSaver.\n    checkpointer=InMemorySaver(),  # [!code highlight]\n)",
+        "You must configure a checkpointer to persist the graph state across interrupts.\n    In production, use a persistent checkpointer like @[`AsyncPostgresSaver`]. For testing or prototyping, use @[`InMemorySaver`].\n\n    When invoking the agent, pass a `config` that includes the **thread ID** to associate execution with a conversation thread.\n    See the [LangGraph interrupts documentation](/oss/langgraph/interrupts) for details.",
+        "config = {\"configurable\": {\"thread_id\": \"some_id\"}} # [!code highlight]\n# Run the graph until the interrupt is hit.\nresult = agent.invoke(\n    {\n        \"messages\": [\n            {\n                \"role\": \"user\",\n                \"content\": \"Delete old records from the database\",\n            }\n        ]\n    },\n    config=config, # [!code highlight]\n    version=\"v2\", # [!code highlight]\n)\n\n# result is a GraphOutput with .value and .interrupts\nprint(result.interrupts)  # [!code highlight]\n# > (\n# >    Interrupt(\n# >       value={\n# >          'action_requests': [\n# >             {\n# >                'name': 'execute_sql',\n# >                'arguments': {'query': 'DELETE FROM records WHERE created_at < NOW() - INTERVAL \\'30 days\\';'},\n# >                'description': 'Tool execution pending approval\\n\\nTool: execute_sql\\nArgs: {...}'\n# >             }\n# >          ],\n# >          'review_configs': [\n# >             {\n# >                'action_name': 'execute_sql',\n# >                'allowed_decisions': ['approve', 'reject']\n# >             }\n# >          ]\n# >       }\n# >    ),\n# > )\n\n\n# Resume with approval decision\nagent.invoke(\n    Command( # [!code highlight]\n        resume={\"decisions\": [{\"type\": \"approve\"}]}  # or \"reject\" [!code highlight]\n    ), # [!code highlight]\n    config=config, # Same thread ID to resume the paused conversation\n    version=\"v2\",\n)"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What causes the `MULTIPLE_SUBGRAPHS` error, and what fixes does the documentation recommend for the different persistence and interrupt needs?",
+      "answer": "The `MULTIPLE_SUBGRAPHS` error happens when you call a subgraph inside a node multiple times and that subgraph was compiled with `checkpointer=True`, which is continuations mode. The docs recommend three remedies depending on your needs: if you do not need interrupts, compile the subgraph with `checkpointer=False`; if you need interrupts but do not need cross-invocation persistence, omit the `checkpointer` argument so the subgraph uses the default inherited mode, where each invocation gets a unique namespace and starts fresh; if you do need cross-invocation persistence, keep `checkpointer=True`, in which case LangGraph assigns position-based namespace suffixes to avoid conflicts, and for stable name-based namespaces you should wrap each subgraph with a unique node name.",
+      "source_files": [
+        "langgraph/errors/MULTIPLE_SUBGRAPHS.mdx"
+      ],
+      "supporting_passages": [
+        "This error occurs when you [call a subgraph inside a node](/oss/langgraph/use-subgraphs#call-a-subgraph-inside-a-node) multiple times, and the subgraph is compiled with `checkpointer=True` (continuations mode).",
+        "1. **Don't need interrupts?** Use `checkpointer=False` to opt out of checkpointing entirely:\n   ```python\n   subgraph = subgraph_builder.compile(checkpointer=False)\n   ```",
+        "2. **Need interrupts but not cross-invocation persistence?** Use the default inherited mode by omitting `checkpointer`:\n   ```python\n   subgraph = subgraph_builder.compile()\n   ```\n   Each invocation gets a unique namespace, so parallel execution works. The subgraph starts fresh each time but can use `interrupt()`.",
+        "3. **Need cross-invocation persistence?** Use `checkpointer=True`. LangGraph assigns each invocation a position-based namespace suffix (`calling_node`, `calling_node|1`, etc.) to prevent conflicts. For stable, name-based namespaces, wrap each subgraph with a unique node name — see [parallel subgraphs](/oss/langgraph/use-subgraphs#subgraph-persistence)."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "What three attributes does LangChain's `Document` abstraction have?",
+      "answer": "A LangChain `Document` has three attributes: `page_content`, which is the string content; `metadata`, which is a dictionary of arbitrary metadata; and `id`, which is an optional string identifier for the document.",
+      "source_files": [
+        "langchain/knowledge-base.mdx"
+      ],
+      "supporting_passages": [
+        "LangChain implements a @[Document] abstraction, which is intended to represent a unit of text and associated metadata. It has three attributes:",
+        "- `page_content`: a string representing the content;\n- `metadata`: a dict containing arbitrary metadata;\n- `id`: (optional) a string identifier for the document."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How does the semantic search tutorial map onto LangChain's component architecture for a RAG-style pipeline?",
+      "answer": "The semantic search tutorial aligns with the component architecture in stages. Its `Documents and document loaders` plus `Text splitters` correspond to the architecture's `Input processing` layer, which transforms raw data into structured documents. Its `Embeddings` and `Vector stores` correspond to `Embedding & storage`, which converts text into searchable vector representations. Its `retrievers` correspond to the `Retrieval` layer, which finds relevant information for a query. Finally, because the tutorial 'includes a minimal RAG implementation on top of the search engine,' it extends beyond retrieval into the architecture's `Generation` layer, where AI models create responses using retrieved information.",
+      "source_files": [
+        "langchain/knowledge-base.mdx",
+        "langchain/component-architecture.mdx"
+      ],
+      "supporting_passages": [
+        "This guide focuses on retrieval of text data. We will cover the following concepts:\n\n- [Documents and document loaders](/oss/integrations/document_loaders);\n- [Text splitters](/oss/integrations/splitters);\n- [Embeddings](/oss/integrations/embeddings);\n- [Vector stores](/oss/integrations/vectorstores) and [retrievers](/oss/integrations/retrievers).",
+        "The guide also includes a minimal RAG implementation on top of the search engine.",
+        "1. **Input processing** – Transform raw data into structured documents\n2. **Embedding & storage** – Convert text into searchable vector representations\n3. **Retrieval** – Find relevant information based on user queries\n4. **Generation** – Use AI models to create responses, optionally with tools\n5. **Orchestration** – Coordinate everything through agents and memory systems"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "In the LangGraph calculator quickstart, why is `messages` declared as `Annotated[list[AnyMessage], operator.add]` in the Python state definition?",
+      "answer": "It is declared that way so that message state persists across the agent's execution and new messages are appended to the existing list instead of replacing it. The `operator.add` reducer is what gives `messages` append behavior.",
+      "source_files": [
+        "langgraph/quickstart.mdx"
+      ],
+      "supporting_passages": [
+        "State in LangGraph persists throughout the agent's execution.\n\n    The `Annotated` type with `operator.add` ensures that new messages are appended to the existing list rather than replacing it.",
+        "class MessagesState(TypedDict):\n    messages: Annotated[list[AnyMessage], operator.add]\n    llm_calls: int"
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "In LangChain agent short-term memory, what state class and state key are used by default to store conversation history?",
+      "answer": "By default, LangChain agents use `AgentState` for short-term memory, and the conversation history is stored under the `messages` key.",
+      "source_files": [
+        "langchain/short-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "By default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How do you set up production short-term memory for a LangChain agent using PostgreSQL?",
+      "answer": "Use a database-backed checkpointer. In production, the docs say to install `langgraph-checkpoint-postgres`, create a `PostgresSaver` from your connection string, call `setup()` to auto-create the PostgreSQL tables, and pass that saver as the agent's `checkpointer` when calling `create_agent`.",
+      "source_files": [
+        "langchain/short-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "In production, use a checkpointer backed by a database:",
+        "pip install langgraph-checkpoint-postgres",
+        "from langgraph.checkpoint.postgres import PostgresSaver  # [!code highlight]",
+        "with PostgresSaver.from_conn_string(DB_URI) as checkpointer:",
+        "    checkpointer.setup() # auto create tables in PostgreSQL",
+        "        checkpointer=checkpointer,  # [!code highlight]"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "Why can long conversation histories degrade agent performance even when the model supports the full context length, and what short-term memory strategies are recommended to address this?",
+      "answer": "Long conversations can fail because the full history may not fit in the model context window, causing context loss or errors. Even when the model can technically fit the whole context, the docs say LLMs often perform poorly over long contexts because they get distracted by stale or off-topic content, while also becoming slower and more expensive. To manage this, the recommended short-term memory strategies are to trim messages, delete messages, or summarize older messages so the agent can retain useful context without exceeding the context window.",
+      "source_files": [
+        "langchain/short-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in an context loss or errors.",
+        "Even if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.",
+        "Remove first or last N messages (before calling LLM)",
+        "Delete messages from LangGraph state permanently",
+        "Summarize earlier messages in the history and replace them with a summary",
+        "This allows the agent to keep track of the conversation without exceeding the LLM's context window."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "In Python LangGraph, what happens if a `StateGraph` node returns a list instead of a dict, and what must nodes return instead?",
+      "answer": "If a Python `StateGraph` node returns a list instead of a dict, invoking the graph raises an `InvalidUpdateError` such as `Expected dict, got ['whoops']`. Nodes must return a dict containing one or more keys defined in the graph state. If the node has complex logic, every code path should return an appropriate dict.",
+      "source_files": [
+        "langgraph/errors/INVALID_GRAPH_NODE_RETURN_VALUE.mdx"
+      ],
+      "supporting_passages": [
+        "A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph)\nreceived a non-dict return type from a node. Here's an example:",
+        "InvalidUpdateError: Expected dict, got ['whoops']",
+        "Nodes in your graph must return a dict containing one or more keys defined in your state.",
+        "* If you have complex logic in your node, make sure all code paths return an appropriate dict for your defined state."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "What does the `MODEL_NOT_FOUND` error mean, where is it currently used, and what troubleshooting steps do the docs recommend?",
+      "answer": "`MODEL_NOT_FOUND` means the model name you supplied is not acknowledged by the provider. The docs note that this error is currently only used in `langchainjs` (JavaScript/TypeScript). The recommended troubleshooting steps are to verify the model identifier for correct spelling and format, and to check any proxy or wrapper configuration to make sure model names are not being restricted or altered.",
+      "source_files": [
+        "langchain/errors/MODEL_NOT_FOUND.mdx"
+      ],
+      "supporting_passages": [
+        "Currently only used in `langchainjs` (JavaScript/TypeScript).",
+        "The model name you have specified is not acknowledged by your provider.",
+        "1. **Verify the model identifier**: Double check the model string you are passing in. Ensure the spelling and format are correct",
+        "2. **Check proxy/wrapper configurations**: If you are using a proxy or other alternative host with a model wrapper, confirm that the permitted model names are not restricted or altered"
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How does `useStream` split responsibilities between LangChain/LangGraph connectivity and the UI library in React integrations?",
+      "answer": "`useStream` is responsible for the LangGraph-side connection behavior: it is UI-agnostic and manages streaming messages, thread management, tool call state, and reconnection. The chosen UI library is responsible for the visual layer. Because of that separation, you can switch, replace, or combine UI libraries without changing the underlying agent wiring.",
+      "source_files": [
+        "langchain/frontend/integrations.mdx"
+      ],
+      "supporting_passages": [
+        "The `useStream` hook from `@langchain/react` is UI-agnostic. It returns plain reactive state that you wire up to any component library you already use.",
+        "`useStream` handles everything related to the LangGraph connection: streaming messages, thread management, tool call state, and reconnection. The library of your choice handles the visual layer.",
+        "This separation means you can switch, replace, or compose UI libraries without touching any of the agent wiring."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What must you configure if you want a LangChain agent to remember prior interactions within a single conversation thread and send traces to a custom LangSmith project?",
+      "answer": "You need two sets of configuration. For thread-level memory, create the agent with a `checkpointer` and invoke it with a `thread_id` so the conversation state persists for that thread. For tracing, enable LangSmith tracing with `LANGSMITH_TRACING=true` and a `LANGSMITH_API_KEY`, then set `LANGSMITH_PROJECT` to send traces to a custom project name.",
+      "source_files": [
+        "langchain/short-term-memory.mdx",
+        "langgraph/observability.mdx"
+      ],
+      "supporting_passages": [
+        "To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.",
+        "State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.",
+        "{\"configurable\": {\"thread_id\": \"1\"}},  # [!code highlight]",
+        "To enable tracing for your application, set the following environment variables:",
+        "export LANGSMITH_TRACING=true",
+        "export LANGSMITH_API_KEY=<your-api-key>",
+        "You can set a custom project name for your entire application by setting the `LANGSMITH_PROJECT` environment variable:",
+        "export LANGSMITH_PROJECT=my-agent-project"
+      ],
+      "question_type": "multi_hop"
+    },
+    {
+      "question": "In LangChain's MCP integration, what is the default session behavior of `MultiServerMCPClient` when invoking tools?",
+      "answer": "`MultiServerMCPClient` is stateless by default. Each time a tool is invoked, it creates a fresh MCP `ClientSession`, executes the tool, and then cleans up that session.",
+      "source_files": [
+        "langchain/mcp.mdx"
+      ],
+      "supporting_passages": [
+        "`MultiServerMCPClient` is **stateless by default**. Each tool invocation creates a fresh MCP `ClientSession`, executes the tool, and then cleans up. See the [stateful sessions](#stateful-sessions) section for more details."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "What happens if you create a LangChain agent with an empty tool list?",
+      "answer": "If you pass an empty tool list, the agent is reduced to a single LLM node and does not have tool-calling capabilities.",
+      "source_files": [
+        "langchain/agents.mdx"
+      ],
+      "supporting_passages": [
+        "If an empty tool list is provided, the agent will consist of a single LLM node without tool-calling capabilities."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "In branching chat, what does `firstSeenState.parent_checkpoint` represent, and how is it used?",
+      "answer": "`firstSeenState.parent_checkpoint` is the checkpoint immediately before a message. It is used as the fork point when editing a message or regenerating a response, so the backend can branch from that earlier state instead of continuing the current conversation path.",
+      "source_files": [
+        "langchain/frontend/branching-chat.mdx"
+      ],
+      "supporting_passages": [
+        "The checkpoint just before this message. Use it as the fork point for edits and regenerations",
+        "When you submit with a `checkpoint` parameter, the backend forks from that point instead of appending to the current conversation."
+      ],
+      "question_type": "factual"
+    },
+    {
+      "question": "How does LangChain's `create_agent` use LangGraph concepts like state, nodes, and edges to run an agent?",
+      "answer": "`create_agent` is built on top of LangGraph's graph runtime. In this model, execution is organized as a graph: state holds the current snapshot of the application, nodes perform the work and return state updates, and edges determine which node runs next. A LangChain agent created with `create_agent` moves through that graph by executing nodes such as the model node, tools node, or middleware.",
+      "source_files": [
+        "langchain/agents.mdx",
+        "langgraph/graph-api.mdx"
+      ],
+      "supporting_passages": [
+        "@[`create_agent`] builds a **graph**-based agent runtime using [LangGraph](/oss/langgraph/overview). A graph consists of nodes (steps) and edges (connections) that define how your agent processes information. The agent moves through this graph, executing nodes like the model node (which calls the model), the tools node (which executes tools), or middleware.",
+        "1. [`State`](#state): A shared data structure that represents the current snapshot of your application. It can be any data type, but is typically defined using a shared state schema.",
+        "2. [`Nodes`](#nodes): Functions that encode the logic of your agents. They receive the current state as input, perform some computation or side-effect, and return an updated state.",
+        "3. [`Edges`](#edges): Functions that determine which `Node` to execute next based on the current state. They can be conditional branches or fixed transitions."
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "What kinds of control does middleware provide over the LangChain agent loop?",
+      "answer": "Middleware lets you more tightly control what happens inside an agent. Since the core agent loop is calling a model, letting it choose tools, and finishing when no more tools are called, middleware can hook before and after each of those steps. The documentation highlights uses such as logging and analytics, prompt or tool-selection transformation, output formatting, retries, fallbacks, early termination, rate limits, guardrails, and PII detection.",
+      "source_files": [
+        "langchain/middleware/overview.mdx"
+      ],
+      "supporting_passages": [
+        "Middleware provides a way to more tightly control what happens inside the agent.",
+        "- Tracking agent behavior with logging, analytics, and debugging.\n- Transforming prompts, [tool selection](/oss/langchain/middleware/built-in#llm-tool-selector), and output formatting.\n- Adding [retries](/oss/langchain/middleware/built-in#tool-retry), [fallbacks](/oss/langchain/middleware/built-in#model-fallback), and early termination logic.\n- Applying [rate limits](/oss/langchain/middleware/built-in#model-call-limit), guardrails, and [PII detection](/oss/langchain/middleware/built-in#pii-detection).",
+        "The core agent loop involves calling a model, letting it choose tools to execute, and then finishing when it calls no more tools:",
+        "Middleware exposes hooks before and after each of those steps:"
+      ],
+      "question_type": "conceptual"
+    },
+    {
+      "question": "According to the LangGraph test guide, how can you test only a partial execution path in a larger graph without restructuring it?",
+      "answer": "Use LangGraph's persistence mechanism to simulate execution starting partway through the graph. First compile the agent with a checkpointer. Then call `update_state` with `as_node` set to the node immediately before the section you want to test. Finally, invoke the agent again with the same `thread_id` and set `interrupt_after` to the node where you want execution to stop. In the example, execution is resumed by passing `None`, and it is stopped after `node3` so `node4` does not run.",
+      "source_files": [
+        "langgraph/test.mdx"
+      ],
+      "supporting_passages": [
+        "However, if you do not wish to make changes to your agent graph's overall structure, you can use LangGraph's persistence mechanisms to simulate a state where your agent is paused right before the beginning of the desired section, and will pause again at the end of the desired section.",
+        "1. Compile your agent with a checkpointer (the in-memory checkpointer @[`InMemorySaver`] will suffice for testing).\n2. Call your agent's [`update_state`](/oss/langgraph/use-time-travel) method with an [`as_node`](/oss/langgraph/use-time-travel#from-a-specific-node) parameter set to the name of the node *before* the one you want to start your test.\n3. Invoke your agent with the same `thread_id` you used to update the state and an `interrupt_after` parameter set to the name of the node you want to stop at.",
+        "# Resume execution by passing None",
+        "# Stop after node 3 so that node 4 doesn't run"
+      ],
+      "question_type": "procedural"
+    },
+    {
+      "question": "What is the caveat when using dynamic model selection together with structured output in Python LangChain agents?",
+      "answer": "You cannot use pre-bound models for that setup. The documentation says models that have already had `bind_tools` called are not supported with structured output during dynamic model selection, so the models passed through the middleware must not be pre-bound.",
+      "source_files": [
+        "langchain/agents.mdx"
+      ],
+      "supporting_passages": [
+        "Pre-bound models (models with @[`bind_tools`][BaseChatModel.bind_tools] already called) are not supported when using structured output. If you need dynamic model selection with structured output, ensure the models passed to the middleware are not pre-bound."
+      ],
+      "question_type": "edge_case"
+    },
+    {
+      "question": "Compared with the general middleware overview, what makes guardrails a specialized use of middleware, and where in execution can guardrails intervene?",
+      "answer": "Middleware is the broad control layer for agent execution: it can track behavior, transform prompts, tool selection, and outputs, add retries and fallbacks, and apply rate limits, guardrails, and PII detection. Guardrails are the safety- and compliance-focused use of that layer. They validate and filter content, detect sensitive information, enforce policies, validate outputs, and prevent unsafe behavior. The guardrails documentation also says these checks are implemented through middleware hooks that can run before the agent starts, after it completes, or around model and tool calls, and that guardrails can be either deterministic or model-based.",
+      "source_files": [
+        "langchain/middleware/overview.mdx",
+        "langchain/guardrails.mdx"
+      ],
+      "supporting_passages": [
+        "Middleware provides a way to more tightly control what happens inside the agent. Middleware is useful for the following:\n\n- Tracking agent behavior with logging, analytics, and debugging.\n- Transforming prompts, [tool selection](/oss/langchain/middleware/built-in#llm-tool-selector), and output formatting.\n- Adding [retries](/oss/langchain/middleware/built-in#tool-retry), [fallbacks](/oss/langchain/middleware/built-in#model-fallback), and early termination logic.\n- Applying [rate limits](/oss/langchain/middleware/built-in#model-call-limit), guardrails, and [PII detection](/oss/langchain/middleware/built-in#pii-detection).",
+        "Guardrails help you build safe, compliant AI applications by validating and filtering content at key points in your agent's execution. They can detect sensitive information, enforce content policies, validate outputs, and prevent unsafe behaviors before they cause problems.",
+        "You can implement guardrails using [middleware](/oss/langchain/middleware) to intercept execution at strategic points - before the agent starts, after it completes, or around model and tool calls.",
+        "Use rule-based logic like regex patterns, keyword matching, or explicit checks. Fast, predictable, and cost-effective, but may miss nuanced violations.",
+        "Use LLMs or classifiers to evaluate content with semantic understanding. Catch subtle issues that rules miss, but are slower and more expensive."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "Compared with LangChain's branching chat UI, how do LangGraph replay and fork operate on checkpoints, and what kind of re-execution behavior do they imply?",
+      "answer": "Branching chat is the conversation-UI version of checkpoint branching: editing a user message or regenerating an AI response uses a `parent_checkpoint`, re-runs from that point, and creates a new branch while preserving the original path. LangGraph time travel exposes the lower-level checkpoint operations behind that idea: replay retries from a prior checkpoint, while fork branches from a prior checkpoint with modified state. In both cases, execution resumes from the checkpoint, work before the checkpoint is already saved and is not re-executed, and later nodes can run again and produce different results. Fork also preserves the original execution history rather than rolling it back.",
+      "source_files": [
+        "langchain/frontend/branching-chat.mdx",
+        "langgraph/use-time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "Branching chat treats a conversation as a tree rather than a list. Each message\nis a node, and editing a message or regenerating a response creates a **fork**\nfrom that point. The original path is preserved as a sibling branch, so users\ncan switch back and forth between different conversation trajectories.",
+        "1. Get the `parent_checkpoint` from the message's metadata\n2. Submit the edited message with that checkpoint\n3. The agent re-runs from that point, creating a new branch",
+        "1. Get the `parent_checkpoint` from the AI message's metadata\n2. Submit with `undefined` input and the parent checkpoint\n3. The agent produces a fresh response, creating a new branch",
+        "LangGraph persists every state transition as a **checkpoint**. When you submit\nwith a `checkpoint` parameter, the backend forks from that point instead of\nappending to the current conversation.",
+        "LangGraph supports time travel through [checkpoints](/oss/langgraph/persistence#checkpoints):\n\n- **[Replay](#replay)**: Retry from a prior checkpoint.\n- **[Fork](#fork)**: Branch from a prior checkpoint with modified state to explore an alternative path.\n\nBoth work by resuming from a prior checkpoint. Nodes before the checkpoint are not re-executed (results are already saved). Nodes after the checkpoint re-execute, including any LLM calls, API requests, and [interrupts](/oss/langgraph/interrupts) (which may produce different results).",
+        "`update_state` does **not** roll back a thread. It creates a new checkpoint that branches from the specified point. The original execution history remains intact."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "Compared with the tool-calling frontend pattern, how does the graph-execution frontend pattern consume streaming data and what user experience does each one emphasize?",
+      "answer": "The tool-calling pattern is centered on tool invocations. It uses the unified `toolCalls` array, where each item carries the tool name, arguments, ID, result, and lifecycle state, and it emphasizes rendering inline cards for pending, completed, or errored tool calls. The graph-execution pattern is centered on graph nodes instead of tools. It uses `messages` for streaming-content routing, `values` for completed node outputs, and `getMessagesMetadata` to read `langgraph_node`, then renders a card for each node showing status, streaming content, and final committed output across the pipeline.",
+      "source_files": [
+        "langchain/frontend/tool-calling.mdx",
+        "langgraph/frontend/graph-execution.mdx"
+      ],
+      "supporting_passages": [
+        "When a LangGraph agent decides it needs external data, it emits one or more\n**tool calls** as part of an AI message. Each tool call includes:\n\n- **name**: the tool being invoked (e.g. `\"get_weather\"`, `\"calculator\"`)\n- **args**: the structured arguments passed to the tool\n- **id**: a unique identifier linking the call to its result\n\nThe agent runtime executes the tool, and the result comes back as a\n`ToolMessage`. The `useStream` hook unifies all of this into a single\n`toolCalls` array you can render directly.",
+        "Tool calls update in place. The same `call.id` transitions from `\"pending\"` to\n`\"completed\"` (or `\"error\"`), so your UI re-renders the same component\nwith new state.",
+        "Wire up `useStream` as usual. The key properties you'll use are `messages`\n(for streaming content routing), `values` (for completed node outputs), and\n`getMessagesMetadata` (for identifying which node produced each token).",
+        "Use `getMessagesMetadata` to extract the\n`langgraph_node` value and route tokens to the correct card:",
+        "LangGraph agents aren't black boxes. Every graph is composed of **named nodes**\nthat execute in sequence or in parallel: classify, research, analyze,\nsynthesize. Graph execution cards make this pipeline visible by rendering a card\nfor each node, showing its status, streaming its content in real time, and\ntracking completion across the entire workflow. Users see exactly what the agent\nis doing, which step it's on, and what each step produced.",
+        "There are two sources of content for each node, and picking the right one\nmatters for a smooth UX:\n\n| Source | When to use |\n| --- | --- |\n| `streamingContent[node.name]` | While the node is actively streaming, this contains tokens as they arrive |\n| `stream.values[node.stateKey]` | After the node completes, this contains the final, committed output |"
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "Compared with run-scoped context in the context overview, how does LangGraph persistence extend memory across interactions?",
+      "answer": "The context model distinguishes between data that is scoped to a single run and data that persists across conversations. Runtime context is single-run, while dynamic runtime context is mutable during that run and acts as short-term memory. Cross-conversation context is persistent and acts as long-term memory across multiple runs. LangGraph persistence provides a concrete mechanism for that longer-lived memory by saving graph state as checkpoints organized into threads; the persistence docs say follow-up interactions can be sent to the same thread so it retains memory of previous ones.",
+      "source_files": [
+        "concepts/context.mdx",
+        "langgraph/persistence.mdx"
+      ],
+      "supporting_passages": [
+        "Context can be characterized along two key dimensions:\n\n1. By **mutability**:\n  * **Static context**: Immutable data that doesn't change during execution (e.g., user metadata, database connections, tools)\n  * **Dynamic context**: Mutable data that evolves as the application runs (e.g., conversation history, intermediate results, tool call observations)\n2. By **lifetime**:\n  * **Runtime context**: Data scoped to a single run or invocation\n  * **Cross-conversation context**: Data that persists across multiple conversations or sessions",
+        "**Dynamic runtime context** represents mutable data that can evolve during a single run and is managed through the LangGraph state object. This includes conversation history, intermediate results, and values derived from tools or LLM outputs. In LangGraph, the state object acts as [short-term memory](/oss/concepts/memory) during a run.",
+        "**Dynamic cross-conversation context** represents persistent, mutable data that spans across multiple conversations or sessions and is managed through the LangGraph store. This includes user profiles, preferences, and historical interactions. The LangGraph store acts as [long-term memory](/oss/concepts/memory#long-term-memory) across multiple runs. This can be used to read or update persistent facts (e.g., user profiles, preferences, prior interactions).",
+        "LangGraph has a built-in persistence layer that saves graph state as checkpoints. When you compile a graph with a checkpointer, a snapshot of the graph state is saved at every step of execution, organized into threads. This enables human-in-the-loop workflows, conversational memory, time travel debugging, and fault-tolerant execution.",
+        "- **Memory**: Checkpointers allow for [\"memory\"](/oss/concepts/memory) between interactions. In the case of repeated human interactions (like conversations) any follow up messages can be sent to that thread, which will retain its memory of previous ones. See [Add memory](/oss/langgraph/add-memory) for information on how to add and manage conversation memory using checkpointers."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "Compared with the supervisor pattern for subagents, how do 2-Step RAG and Agentic RAG organize tools and decision-making?",
+      "answer": "The supervisor pattern distributes responsibility across multiple specialized agents: a central supervisor coordinates worker agents, and tools are partitioned across those workers along with their own prompts or instructions. That setup is aimed at tasks requiring different kinds of expertise across domains. By contrast, 2-Step RAG uses a fixed sequence where retrieval always happens before generation, so its behavior is more straightforward and predictable. Agentic RAG keeps retrieval inside an agent's reasoning loop: a single agent decides when and how to retrieve during the interaction, rather than a supervisor delegating work to separate specialists.",
+      "source_files": [
+        "langchain/multi-agent/subagents-personal-assistant.mdx",
+        "langchain/retrieval.mdx"
+      ],
+      "supporting_passages": [
+        "The **supervisor pattern** is a [multi-agent](/oss/langchain/multi-agent) architecture where a central supervisor agent coordinates specialized worker agents. This approach excels when tasks require different types of expertise. Rather than building one agent that manages tool selection across domains, you create focused specialists coordinated by a supervisor who understands the overall workflow.",
+        "Multi-agent architectures allow you to partition [tools](/oss/langchain/tools) across workers, each with their own individual prompts or instructions.",
+        "In **2-Step RAG**, the retrieval step is always executed before the generation step. This architecture is straightforward and predictable, making it suitable for many applications where the retrieval of relevant documents is a clear prerequisite for generating an answer.",
+        "**Agentic Retrieval-Augmented Generation (RAG)** combines the strengths of Retrieval-Augmented Generation with agent-based reasoning. Instead of retrieving documents before answering, an agent (powered by an LLM) reasons step-by-step and decides **when** and **how** to retrieve information during the interaction."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "Compared with the Functional API guidance in 'Choosing between Graph and Functional APIs', why do graph execution cards line up more naturally with the Graph API described in 'Graph Execution'?",
+      "answer": "Graph execution cards fit the Graph API because they assume a workflow made of named nodes with shared state, visible branching or parallelism, and outputs mapped to state keys. The API selection guide explicitly recommends the Graph API for complex workflow visualization, explicit shared state, conditional branching, and parallel execution paths. Those are the same ingredients the graph-execution UI renders as per-node cards with status and content. The Functional API is positioned differently: it favors minimal changes to procedural code, standard control flow, function-scoped state, rapid prototyping, and linear workflows, so it is less directly aligned with a node-by-node execution visualization.",
+      "source_files": [
+        "langgraph/choosing-apis.mdx",
+        "langgraph/frontend/graph-execution.mdx"
+      ],
+      "supporting_passages": [
+        "Use the **Graph API** when you need:\n- **Complex workflow visualization** for debugging and documentation\n- **Explicit state management** with shared data across multiple nodes\n- **Conditional branching** with multiple decision points\n- **Parallel execution paths** that need to merge later\n- **Team collaboration** where visual representation aids understanding",
+        "Use the **Functional API** when you want:\n- **Minimal code changes** to existing procedural code\n- **Standard control flow** (if/else, loops, function calls)\n- **Function-scoped state** without explicit state management\n- **Rapid prototyping** with less boilerplate\n- **Linear workflows** with simple branching logic",
+        "LangGraph agents aren't black boxes. Every graph is composed of **named nodes**\nthat execute in sequence or in parallel: classify, research, analyze,\nsynthesize. Graph execution cards make this pipeline visible by rendering a card\nfor each node, showing its status, streaming its content in real time, and\ntracking completion across the entire workflow. Users see exactly what the agent\nis doing, which step it's on, and what each step produced.",
+        "Each node writes its output to a specific key in the graph's state. By mapping\nthese node names and state keys to UI components, you can create a visual\nrepresentation of the entire pipeline."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How do the documentation pages distinguish short-term memory from long-term memory in terms of scope, persistence mechanism, and how data is organized?",
+      "answer": "Short-term memory is conversation-scoped: it tracks the ongoing conversation within a single thread and is managed as part of agent state. It is persisted with a checkpointer so the thread can be resumed, and it updates as the graph runs. Long-term memory is broader in scope: it stores user- or application-level information across sessions and across conversational threads. Instead of thread checkpoints, it uses a store, where memories are saved as JSON documents organized by custom namespaces and keys.",
+      "source_files": [
+        "concepts/memory.mdx",
+        "langchain/long-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "* [Short-term memory](#short-term-memory), or [thread](/oss/langgraph/persistence#threads)-scoped memory, tracks the ongoing conversation by maintaining message history within a session. LangGraph manages short-term memory as a part of your agent's [state](/oss/langgraph/graph-api#state). State is persisted to a database using a [checkpointer](/oss/langgraph/persistence#checkpoints) so the thread can be resumed at any time. Short-term memory updates when the graph is invoked or a step is completed, and the State is read at the start of each step.",
+        "* [Long-term memory](#long-term-memory) stores user-specific or application-level data across sessions and is shared _across_ conversational threads. It can be recalled _at any time_ and _in any thread_. Memories are scoped to any custom namespace, not just within a single thread ID. LangGraph provides [stores](/oss/langgraph/persistence#memory-store) ([reference doc](https://langchain-ai.github.io/langgraph/reference/store/#langgraph.store.base.BaseStore)) to let you save and recall long-term memories.",
+        "LangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/persistence#memory-store).",
+        "Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How does LangGraph time travel compare with ordinary short-term memory persistence in what it stores and what it enables you to do?",
+      "answer": "Both features rely on persisted agent state, but they serve different purposes. Short-term memory provides thread-level persistence so an agent can remember prior interactions within a conversation and resume that thread later. Time travel goes further by exposing the full checkpoint history created during execution. That lets you inspect exact prior states and resume from any chosen checkpoint, which rolls the graph back to that state and re-executes forward to explore an alternative path.",
+      "source_files": [
+        "langchain/frontend/time-travel.mdx",
+        "langchain/short-term-memory.mdx"
+      ],
+      "supporting_passages": [
+        "Every state change in a LangGraph agent creates a **checkpoint**, a complete\nsnapshot of the agent's state at that moment. Time travel lets you inspect any\ncheckpoint, view the exact state the agent held, and **resume execution from\nthat point** to explore alternative paths. It's a debugger, an undo button, and\nan audit log all in one.",
+        "LangGraph persists agent state after every node execution. Each persisted state\nis a `ThreadState` object that captures:",
+        "This tells LangGraph to:\n\n1. Roll back to the selected checkpoint's state\n2. Re-execute the graph from that point forward\n3. Stream the new results to the client",
+        "To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.",
+        "State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.",
+        "Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "What is the architectural difference between the subagents pattern and the state machine pattern used in the customer support handoffs tutorial?",
+      "answer": "The subagents pattern uses a supervisor-style main agent that coordinates separate subagents by calling them as tools. In that design, the subagents themselves are stateless, while the main agent keeps the conversation context and decides across turns which subagent to use. By contrast, the state machine pattern in the customer support tutorial does not switch among separate subagents. It uses one underlying agent whose prompt and tool set change according to workflow state, with `current_step` determining which configuration is active on each turn.",
+      "source_files": [
+        "langchain/multi-agent/subagents.mdx",
+        "langchain/multi-agent/handoffs-customer-support.mdx"
+      ],
+      "supporting_passages": [
+        "In the **subagents** architecture, a central main [agent](/oss/langchain/agents) (often referred to as a **supervisor**) coordinates subagents by calling them as [tools](/oss/langchain/tools).",
+        "Subagents are stateless—they don't remember past interactions, with all conversation memory maintained by the main agent.",
+        "The supervisor is a full agent that maintains conversation context and dynamically decides which subagents to call across multiple turns.",
+        "Unlike the [subagents pattern](/oss/langchain/multi-agent/subagents-personal-assistant) where sub-agents are called as tools, the **state machine pattern** uses a single agent whose configuration changes based on workflow progress. Each \"step\" is just a different configuration (system prompt + tools) of the same underlying agent, selected dynamically based on state.",
+        "The `current_step` field is the core of the state machine pattern - it determines which configuration (prompt + tools) is loaded on each turn."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How do human-in-the-loop interrupts compare with time travel as mechanisms for pausing and resuming agent execution?",
+      "answer": "Human-in-the-loop interrupts pause execution when a tool call matches a review policy, such as a potentially risky action. The paused run is saved through persistence, and resume depends on a human decision: approve, edit, or reject the action. Time travel is different: it is based on the checkpoint history created by every state change. Instead of reviewing a pending tool action, a user selects an earlier checkpoint, and LangGraph rolls back to that saved state and re-executes from there. Time travel also preserves the original timeline, so resuming creates a branch rather than replacing history permanently.",
+      "source_files": [
+        "langchain/human-in-the-loop.mdx",
+        "langchain/frontend/time-travel.mdx"
+      ],
+      "supporting_passages": [
+        "When a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.",
+        "The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.",
+        "A human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).",
+        "Every state change in a LangGraph agent creates a **checkpoint**, a complete\nsnapshot of the agent's state at that moment. Time travel lets you inspect any\ncheckpoint, view the exact state the agent held, and **resume execution from\nthat point** to explore alternative paths. It's a debugger, an undo button, and\nan audit log all in one.",
+        "The core of time travel is the ability to **resume execution from any prior\ncheckpoint**. When a user selects a checkpoint, call `submit` with `null` input\nand pass the checkpoint reference:",
+        "This tells LangGraph to:\n\n1. Roll back to the selected checkpoint's state\n2. Re-execute the graph from that point forward\n3. Stream the new results to the client",
+        "Resuming from a checkpoint does not delete the original timeline. The previous\ncheckpoints remain available in the history. This means users can always go back\nand try a different path without losing any prior work."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How is `GRAPH_RECURSION_LIMIT` different from `INVALID_GRAPH_NODE_RETURN_VALUE` in both what causes the error and how you should fix it?",
+      "answer": "`GRAPH_RECURSION_LIMIT` is an execution-flow problem: the graph hit its maximum number of steps before reaching a stop condition, which often indicates an infinite loop or cycle, though a legitimately complex graph may also hit the default limit. The fix is to inspect the graph logic for cycles, or raise the recursion limit if many iterations are expected. `INVALID_GRAPH_NODE_RETURN_VALUE` is a node-output contract problem: a node returned a non-object/non-dict instead of a state update. The fix is to make sure every code path returns an appropriate object or dict containing one or more keys defined in the graph state.",
+      "source_files": [
+        "langgraph/errors/GRAPH_RECURSION_LIMIT.mdx",
+        "langgraph/errors/INVALID_GRAPH_NODE_RETURN_VALUE.mdx"
+      ],
+      "supporting_passages": [
+        "Your LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) reached the maximum number of steps before hitting a stop condition.",
+        "This is often due to an infinite loop caused by code like the example below:",
+        "* If you are not expecting your graph to go through many iterations, you likely have a cycle. Check your logic for infinite loops.",
+        "* If you have a complex graph, you can pass in a higher `recursionLimit` value into your `config` object when invoking your graph like this:\n\n```typescript\nawait graph.invoke({...}, { recursionLimit: 100 });\n```",
+        "A LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph)\nreceived a non-object return type from a node.",
+        "Nodes in your graph must return an object containing one or more keys defined in your state.",
+        "* If you have complex logic in your node, make sure all code paths return an appropriate object for your defined state."
+      ],
+      "question_type": "comparative"
+    },
+    {
+      "question": "How do the Messages guide and the `MESSAGE_COERCION_FAILURE` error doc together distinguish supported model inputs from malformed message input?",
+      "answer": "The Messages guide shows that models can be invoked with simple text strings, with lists of LangChain message objects, or with OpenAI-style message dictionaries. The error doc broadens that by stating that supported message-like inputs also include tuples, and that plain strings are converted to `HumanMessage` objects. `MESSAGE_COERCION_FAILURE` happens when an input falls outside those accepted formats—for example, a message dict that does not contain the required `role` and `content` keys.",
+      "source_files": [
+        "langchain/messages.mdx",
+        "langchain/errors/MESSAGE_COERCION_FAILURE.mdx"
+      ],
+      "supporting_passages": [
+        "Text prompts are strings - ideal for straightforward generation tasks where you don't need to retain conversation history.",
+        "Alternatively, you can pass in a list of messages to the model by providing a list of message objects.",
+        "You can also specify messages directly in OpenAI chat completions format.",
+        "These include OpenAI style message objects (`{ role: \"user\", content: \"Hello world!\" }`), tuples, and plain strings (which are converted to @[`HumanMessage`] objects).",
+        "If a module receives a value outside of one of these formats, you will receive an error:",
+        "ValueError: Message dict must contain 'role' and 'content' keys, got {'role': 'HumanMessage', 'random_field': 'random value'}"
+      ],
+      "question_type": "comparative"
+    }
+  ]
+}
