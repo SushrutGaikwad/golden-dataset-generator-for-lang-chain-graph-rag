@@ -70,7 +70,7 @@ Each QA pair is classified into one of six categories that test different RAG fa
 ## Project Structure
 
 ```
-golden-dataset-generator/
+golden-dataset-generator-for-lang-chain-graph-rag/
 ├── config.py              # Paths, model config, target distribution
 ├── doc_loader.py          # Recursive markdown file loader
 ├── qa_generator.py        # GPT-5.4 QA pair generation with batching
@@ -115,7 +115,7 @@ flowchart TD
 
 ```bash
 git clone https://github.com/SushrutGaikwad/golden-dataset-generator-for-lang-chain-graph-rag.git
-cd golden-dataset-generator
+cd golden-dataset-generator-for-lang-chain-graph-rag
 uv sync
 ```
 
