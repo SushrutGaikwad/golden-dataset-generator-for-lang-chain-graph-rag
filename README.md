@@ -114,7 +114,7 @@ flowchart TD
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/golden-dataset-generator.git
+git clone https://github.com/SushrutGaikwad/golden-dataset-generator-for-lang-chain-graph-rag.git
 cd golden-dataset-generator
 uv sync
 ```
